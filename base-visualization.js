@@ -1,0 +1,119 @@
+class BaseVisualization {
+	constructor(intId) {
+		this._id = intId;
+		this._type = '';
+
+		this._vao = [];
+		this._vbo = [];
+		this._ebo = [];
+
+		this._path = '';
+		this._name = '';
+
+		this._shaders = [];
+		this._selectedShader = 0;
+
+		this._shaderN = 1;
+
+		this._modelMat = glMatrix.mat4.create();
+		this._inverseModelMat = glMatrix.mat4.create();
+		this._rotationMat = glMatrix.mat4.create();
+		this._translateMat = glMatrix.mat4.create();
+		this._scaleMat = glMatrix.mat4.create();
+
+		this._draw = false;
+		this._drawBB = false;
+
+		// Information for the bounding box
+		this._dim = glMatrix.vec3.create();
+		this._center = glMatrix.vec3.create();
+
+		this._boundingBox = null;
+
+		this.resetModelMat();
+	}
+
+	configGL() {
+		gl.useProgram(this._shaders[selectedShader]);
+		this.loadUniform();
+		gl.bindVertexArray(vao[selectedShader]);
+	}
+
+	loadUniform() { consolog.log("Not implemented in: " + this); }
+
+	get id() { return this._id; }
+
+	get draw() { return this._draw; }
+	set draw(draw) { this._draw = draw; }
+
+	get drawBB() { return this._drawBB; }
+	set drawBB(drawBB) { 
+		this._drawBB = drawBB; 
+		this._boundingBox.draw = drawBB;
+	}
+
+	get selectedShader() { return this._selectedShader; }
+	set selectedShader(idShader) { 
+		if (idShader >= this._shaders.length) {
+			throw 'Selected shader out of bound!';
+		}
+
+		this._selectedShader = idShader;
+	}
+
+	rotate(mat4) {
+		let inverseCenterTranslate = glMatrix.mat4.create();
+		let centerTranslate = glMatrix.mat4.create();
+		glMatrix.mat4.fromTranslation(centerTranslate, this._center);
+		glMatrix.mat4.fromTranslation(inverseCenterTranslate,-this._center);
+
+		glMatrix.mat4.multiply(this._rotationMat, this._rotationMat, inverseCenterTranslate);
+		glMatrix.mat4.multiply(this._rotationMat, mat4, this._rotationMat);
+		glMatrix.mat4.multiply(this._rotationMat, centerTranslate, this._rotationMat);
+
+		calculateModel();
+	}
+
+	translate(mat4) {
+		glMatrix.mat4.multiply(this._translateMat, mat4, this._translateMat);
+
+		calculateModel();
+	}
+
+	scale(mat4) {
+		let inverseCenterTranslate = glMatrix.mat4.create();
+		let centerTranslate = glMatrix.mat4.create();
+		glMatrix.mat4.fromTranslation(centerTranslate, this._center);
+		glMatrix.mat4.fromTranslation(inverseCenterTranslate,-this._center);
+
+		glMatrix.mat4.multiply(this._scaleMat, this._scaleMat, inverseCenterTranslate);
+		glMatrix.mat4.multiply(this._scaleMat, mat4, this._scaleMat);
+		glMatrix.mat4.multiply(this._scaleMat, centerTranslate, this._scaleMat);
+
+		calculateModel();
+	}
+
+	calculateModel() {
+		glMatrix.mat4.identity(this._modelMat);
+		glMatrix.mat4.multiply(this._modelMat, this._rotationMat, this._scaleMat);
+		glMatrix.mat4.multiply(this._modelMat, this._modelMat, this._translateMat);
+
+		glMatrix.mat4.invert(this._inverseModelMat, this._modelMat);
+	}
+
+	resetModelMat() {
+		glMatrix.mat4.identity(this._modelMat);
+		glMatrix.mat4.identity(this._inverseModelMat);
+
+		glMatrix.mat4.identity(this._rotationMat);
+		glMatrix.mat4.identity(this._translateMat);
+		glMatrix.mat4.identity(this._scaleMat);
+	}
+
+	updateReferenceToShader(shaderMap) {
+		this._shaders = shaderMap.get(typeof(this));
+		if (this._boundingBox != null) {
+			this._boundingBox.updateReferenceToShader(shaderMap);
+		}
+	}
+}
