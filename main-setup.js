@@ -246,17 +246,34 @@ function setupListeners() {
 	window.addEventListener('resize', resize, false);
 
 	// Robust
-	// canvas.addEventListener('webglcontextlost', handleContextLost, false);
-	// canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
+	canvas.addEventListener('webglcontextlost', handleContextLost, false);
+	canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
 
 	// Key
 	document.addEventListener('keydown', handleKeyDown, false);
 	document.addEventListener('keyup', handleKeyUp, false);
 
 	// Mouse
-	document.addEventListener('mousemove', handleMouseMove, false);
-	document.addEventListener('mousedown', handleMouseDown, false);
-	document.addEventListener('mouseup', handleMouseUp, false);
+	// document.addEventListener('mousemove', handleMouseMove, false);
+	// document.addEventListener('mousedown', handleMouseDown, false);
+	// document.addEventListener('mouseup', handleMouseUp, false);
+
+	// Pointers
+	document.addEventListener('pointermove', handlePointerMove, false);
+	document.addEventListener('pointerdown', handlePointerDown, false);
+	document.addEventListener('pointerup', handlePointerUp, false);	
+}
+
+function handleContextLost(event) {
+	event.preventDefault();
+
+	// cancelRequestAnimFrame();
+	console.log("context lost");
+}
+
+function handleContextRestored(event) {
+	// requestAnimFrame(draw);
+	console.log("context restored");
 }
 
 function handleKeyDown(event) {
@@ -333,10 +350,66 @@ function handleKeyUp(event) {
 
 }
 
-function handleMouseMove(event) {
-	console.log("moving");
+// function handleMouseMove(event) {
+// 	let deltaX = event.clientX - aBrainGL.mousePositionX;
+// 	let deltaY = event.clientY - aBrainGL.mousePositionY;
+
+// 	if (aBrainGL.orbit) {
+// 		camera.orbit(deltaX,deltaY);
+// 		csCamera.orbit(deltaX,deltaY);
+// 	} else if (aBrainGL.pan) {
+// 		camera.pan(deltaX,deltaY);
+// 	} else {
+// 		aBrainGL.orbit = false;
+// 		aBrainGL.pan = false;
+
+// 		return;
+// 	}
+
+
+// 	aBrainGL.mousePositionX = event.clientX;
+// 	aBrainGL.mousePositionY = event.clientY;
+// 	setupViewMat();
+// }
+
+// function handleMouseDown(event) {
+// 	if (event.button == 0) {
+// 		aBrainGL.orbit = true;
+// 		aBrainGL.pan = false;
+// 	} else if (event.button == 1) {
+// 		aBrainGL.orbit = false;
+// 		aBrainGL.pan = true;
+// 	} else { 
+// 		aBrainGL.orbit = false;
+// 		aBrainGL.pan = false;
+
+// 		return;
+// 	}
+
+
+
+// 	aBrainGL.mousePositionX = event.clientX;
+// 	aBrainGL.mousePositionY = event.clientY;
+// }
+
+// function handleMouseUp(event) {
+// 	if (event.button == 0) {
+// 		aBrainGL.orbit = false;
+// 	} else if (event.button == 1) {
+// 		aBrainGL.pan = false;
+// 	} else { return; }
+// }
+
+
+
+
+
+function handlePointerMove(event) {
+	console.log("["+aBrainGL.mousePositionX+", "+aBrainGL.mousePositionY+"]");
 	let deltaX = event.clientX - aBrainGL.mousePositionX;
 	let deltaY = event.clientY - aBrainGL.mousePositionY;
+
+	if (deltaX == 0 && deltaY == 0) { return; }
 
 	if (aBrainGL.orbit) {
 		camera.orbit(deltaX,deltaY);
@@ -350,17 +423,15 @@ function handleMouseMove(event) {
 		return;
 	}
 
-	console.log("updating")
 
 	aBrainGL.mousePositionX = event.clientX;
 	aBrainGL.mousePositionY = event.clientY;
 	setupViewMat();
 }
 
-function handleMouseDown(event) {
-	console.log("down");
+function handlePointerDown(event) {
+	console.log(event);
 	if (event.button == 0) {
-		console.log("orbit = true");
 		aBrainGL.orbit = true;
 		aBrainGL.pan = false;
 	} else if (event.button == 1) {
@@ -374,14 +445,13 @@ function handleMouseDown(event) {
 	}
 
 
-	console.log("down updating");
 
 	aBrainGL.mousePositionX = event.clientX;
 	aBrainGL.mousePositionY = event.clientY;
+
 }
 
-function handleMouseUp(event) {
-	console.log("up");
+function handlePointerUp(event) {
 	if (event.button == 0) {
 		aBrainGL.orbit = false;
 	} else if (event.button == 1) {

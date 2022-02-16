@@ -8,3 +8,6 @@
  □ create function for clear gl parameter on classes
 
  □ Fix right button fucks everything up
+   □ Not working in OSX
+   □ Nor mobile devices
+     □ Program mouse use with PointEvents
