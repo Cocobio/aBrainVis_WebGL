@@ -201,8 +201,8 @@ function startup() {
 	canvas = document.getElementById("myGLCanvas");
 	canvas.width = window.innerWidth-20;
 	canvas.height = window.innerHeight-20;
-	// gl = createGLContext(canvas);
-	gl = WebGLDebugUtils.makeDebugContext(createGLContext(canvas));
+	gl = createGLContext(canvas);
+	// gl = WebGLDebugUtils.makeDebugContext(createGLContext(canvas));
 
 	// Preparing all shaders
 	aBrainGL.shaderKeyMap = setupShaders();
@@ -405,7 +405,7 @@ function handleKeyUp(event) {
 
 
 function handlePointerMove(event) {
-	console.log("["+aBrainGL.mousePositionX+", "+aBrainGL.mousePositionY+"]");
+	// console.log("["+aBrainGL.mousePositionX+", "+aBrainGL.mousePositionY+"]");
 	let deltaX = event.clientX - aBrainGL.mousePositionX;
 	let deltaY = event.clientY - aBrainGL.mousePositionY;
 
@@ -430,7 +430,7 @@ function handlePointerMove(event) {
 }
 
 function handlePointerDown(event) {
-	console.log(event);
+	// console.log(event);
 	if (event.button == 0) {
 		aBrainGL.orbit = true;
 		aBrainGL.pan = false;
