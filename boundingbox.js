@@ -1,3 +1,0 @@
-class BoundingBox extends BaseVisualization {
-
-}

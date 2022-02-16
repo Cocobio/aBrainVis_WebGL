@@ -1,27 +1,25 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-	<title>Listing 2-1, A First WebGL Example</title>
+	<title>aBrainVis</title>
 	<meta charset="utf-8">
 
-	<script id="bundle.vs" type="x-shader/x-vertex">
-		#version 300
+	<script id="bundle" type="x-shader/x-vertex">#version 300 es
 
 		precision highp float;
 		precision highp int;
 
-		in vec3 vertexPos;			// Posicion de las fibras
-		in vec3 vertexNor;			// Normales 
-		in int vertexCol;			// Colores
+		in vec3 aVertexPosition;
+		in vec3 aVertexNormal;
+		in int aVertexColorId;
 
 		out vec4 color;
 
 		uniform sampler2D uColorTable;
 
-		uniform mat4 systemScaleM;
-		uniform mat4 M;
-		uniform mat4 V;
-		uniform mat4 P;
+		uniform mat4 uModel;
+		uniform mat4 uView;
+		uniform mat4 uProj;
 
 		struct LightInfo {
 			vec4 pos;				// Posicion de la luz.
@@ -29,7 +27,7 @@
 			vec3 Ld;				// Intensidad de luz difusa.
 			vec3 Ls;				// Intensidad de luz especular.
 		};
-		uniform LightInfo Light;
+		uniform LightInfo uLight;
 
 		struct MaterialInfo {
 			float Ka;				// Reflectividad ambiental.
@@ -37,29 +35,62 @@
 			float Ks;				// Reflectividad especular.
 			float shininess;		// Coeficiente de reflexion especular.
 		};
-		uniform MaterialInfo Material;
+		uniform MaterialInfo uMaterial;
 
 		void main() {
-			// Iluminacion.
-			vec4 p = V*M*vec4(vertexPos, 1.0);
+			// lighting.
+			vec4 p = uView*uModel*vec4(aVertexPosition, 1.0);
 
-			vec3 n = normalize(mat3(V*M)*vertexNor);
-			vec3 l = normalize(vec3(Light.pos - p));
+			vec3 n = normalize(mat3(uView*uModel)*aVertexNormal);
+			vec3 l = normalize(vec3(uLight.pos - p));
 			vec3 v = normalize(-p.xyz);
 			vec3 r = reflect(-l, n);
 
-			vec3 ambi = Light.La*Material.Ka;
-			vec3 diff = Light.Ld*Material.Kd*max( dot(l, n), 0.0);
-			vec3 spec = Light.Ls*Material.Ks*pow(max(dot(r,v), 0.0), Material.shininess);
+			vec3 ambi = uLight.La*uMaterial.Ka;
+			vec3 diff = uLight.Ld*uMaterial.Kd*max( dot(l, n), 0.0);
+			vec3 spec = uLight.Ls*uMaterial.Ks*pow(max(dot(r,v), 0.0), uMaterial.shininess);
 			
-			// Salidas.
-			color = vec4(ambi + diff + spec, 1.0) * texelFetch(uColorTable, ivec2(vertexCol, 0), 0);
-			gl_Position = P*V*systemScaleM*M*vec4(vertexPos, 1.0);
+			// outputs
+			color = vec4(ambi + diff + spec, 1.0) * texelFetch(uColorTable, ivec2(aVertexColorId, 0), 0);
+			gl_Position = uProj*uView*uModel*vec4(aVertexPosition, 1.0);
 		}
 	</script>
 
-	<script id="standard-fragment" type="x-shader/x-fragment">
-		#version 300 es
+	<script id="coordinate-system" type="x-shader/x-vertex">#version 300 es
+		in vec3 aVertexPosition;
+
+		out vec4 color;
+
+		uniform mat4 uModelArray[3];
+		uniform mat4 uView;
+		uniform mat4 uProj;
+
+		uniform vec4 uColorArray[3];
+
+		void main() {
+			color = uColorArray[gl_InstanceID];
+			gl_Position = uProj*uView*uModelArray[gl_InstanceID]*vec4(aVertexPosition, 1.0);
+		}
+	</script>
+
+	<script id="boundingbox" type="x-shader/x-vertex">#version 300 es
+		in vec3 aVertexPosition;
+
+		out vec4 color;
+
+		uniform mat4 uModel;
+		uniform mat4 uBBModel;
+		uniform mat4 uView;
+		uniform mat4 uProj;
+
+
+		void main() {
+			color = vec4(1.0, 1.0, 1.0, 1.0);
+			gl_Position = uProj*uView*uModel*uBBModel*vec4(aVertexPosition, 1.0);
+		}
+	</script>
+
+	<script id="standard-fragment" type="x-shader/x-fragment">#version 300 es
 
 		precision highp float;
 
@@ -76,22 +107,30 @@
 
 	
 	<!-- Classes and utilities -->
-	<!-- <script type="text/javascript" src="quaternion.js"></script> -->
-	<script type="text/javascript" src="gl-matrix.js"></script>
-	<script type="text/javascript" src="spherical-camera.js"></script>
-	<script type="text/javascript" src="base-visualization.js"></script>
-	<script type="text/javascript" src="bundle.js"></script>
+	<script type="text/javascript" src="Utilities/gl-matrix.js"></script>
+	<script type="text/javascript" src="Utilities/spherical-camera.js"></script>
 
-	<script type="text/javascript" src="abrain-utilities.js"></script>
-	<script type="text/javascript" src="jquery-3.6.0.js"></script>	<!-- For reading text files, and hopefully binary fiies -->
+	<script type="text/javascript" src="VisualizationClasses/base-visualization.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/coordinate-system.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/bundle.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/boundingbox.js"></script>
 
-	<script type="text/javascript" src="webgl_triangle.js"></script>
+	<script type="text/javascript" src="Utilities/abrain-utilities.js"></script>
+
+	<!-- Utilities on WebGL -->
+	<script type="text/javascript" src="Utilities/webgl-utils.js"></script>
+
+	<!-- Only for debugin -->
+	<script type="text/javascript" src="Utilities/webgl-debug.js"></script>
+
+	<!-- Main and setup -->
+	<script type="text/javascript" src="main-setup.js"></script>
 </head>
 
 <body onload="startup();">
 	<canvas id="myGLCanvas" width="500" height="500"></canvas>
 
-	<input type="file" id="avatar" name="avatar" accept="bundles/bundles, TRK/trk, TCK/tck">
+	<!-- <input type="file" id="avatar" name="avatar" accept="bundles/bundles, TRK/trk, TCK/tck"> -->
 </body>
 
 </html>

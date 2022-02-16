@@ -51,7 +51,7 @@ class Camera {
 		this.calculateView();
 	}
 
-	panning(dx, dy) {
+	pan(dx, dy) {
 		let pan = glMatrix.vec3.fromValues(-dx,dy,0);
 		glMatrix.vec3.transformQuat(pan, pan, this.rotation);
 
@@ -85,39 +85,39 @@ class Camera {
 		return outVec;
 	}
 
-	// public void frontView() {
-	// 	Quaternion.setIdentityQ(rotation,0);
-	// 	calculateView();
-	// }
+	frontView() {
+		glMatrix.quat.identity(this.rotation);
+		this.calculateView();
+	}
 
 
-	// public void backView() {
-	// 	Quaternion.fromAngleAndAxis(rotation,0, 180,0,1,0);
-	// 	calculateView();
-	// }
+	backView() {
+		glMatrix.quat.setAxisAngle(this.rotation, [0,1,0], glMatrix.glMatrix.toRadian(180));
+		this.calculateView();
+	}
 
 
-	// public void leftView() {
-	// 	Quaternion.fromAngleAndAxis(rotation,0,90,0,1,0);
-	// 	calculateView();
-	// }
+	leftView() {
+		glMatrix.quat.setAxisAngle(this.rotation, [0,1,0], glMatrix.glMatrix.toRadian(90));
+		this.calculateView();
+	}
 
-	// public void rightView() {
-	// 	Quaternion.fromAngleAndAxis(rotation,0,90,0,-1,0);
-	// 	calculateView();
-	// }
-
-
-	// public void topView() {
-	// 	Quaternion.fromAngleAndAxis(rotation,0,270,1,0,0);
-	// 	calculateView();
-	// }
+	rightView() {
+		glMatrix.quat.setAxisAngle(this.rotation, [0,-1,0], glMatrix.glMatrix.toRadian(90));
+		this.calculateView();
+	}
 
 
-	// public void bottomView() {
-	// 	Quaternion.fromAngleAndAxis(rotation,0,90,1,0,0);
-	// 	calculateView();
-	// }
+	topView() {
+		glMatrix.quat.setAxisAngle(this.rotation, [1,0,0], glMatrix.glMatrix.toRadian(270));
+		this.calculateView();
+	}
+
+
+	bottomView() {
+		glMatrix.quat.setAxisAngle(this.rotation, [1,0,0], glMatrix.glMatrix.toRadian(90));
+		this.calculateView();
+	}
 
 	calculateView() {
 		let currentEye = glMatrix.vec3.clone(this.eye);
@@ -131,7 +131,6 @@ class Camera {
 
 		glMatrix.mat4.lookAt(this.viewMat, currentEye, this.center, currentUp);
 	}
-
 
 
 	calculateViewFromValues(outViewMat, eye, center, up, radius, rotation) {

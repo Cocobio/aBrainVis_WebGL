@@ -48,3 +48,52 @@ function parsePythonData(rawData) {
 		return parseInt(rawData);
 	}
 }
+
+async function loadFile(filePath, asType){
+	return fetch(filePath)
+		.then(response => { return response[asType](); });
+}
+
+function loadShaderFromDOM(id) {
+	var shaderScript = document.getElementById(id);
+
+	// If we don't find an element with the specified id
+	// we do an early exit
+	if (!shaderScript) {
+		return null;
+	}
+
+	// Loop through the children for the found DOM element and 
+	// build up the shader source code as a string
+	var shaderSource = "";
+	var currentChild = shaderScript.firstChild;
+	var i = 0;
+	while (currentChild) {
+		i += 1;
+		if (currentChild.nodeType == 3) { // 3 corresponds to TEXT_NODE
+			shaderSource += currentChild.textContent;
+		}
+		currentChild = currentChild.nextSibling;
+	}
+
+	var shader;
+	if (shaderScript.type == "x-shader/x-vertex") {
+		shader = gl.createShader(gl.VERTEX_SHADER);
+	}
+	else if (shaderScript.type == "x-shader/x-fragment") {
+		shader = gl.createShader(gl.FRAGMENT_SHADER);
+	}
+	else {
+		return null;
+	}
+
+	gl.shaderSource(shader, shaderSource);
+	gl.compileShader(shader);
+
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		alert("Error compiling shader" + gl.getShaderInfoLog(shader));
+		gl.deleteShader(shader);
+		return null;
+	}
+	return shader;
+}

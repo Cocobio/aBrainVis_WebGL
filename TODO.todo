@@ -1,0 +1,10 @@
+ □ Mouse actions
+ □ Keybord actions
+ □ Prepare for context lost
+
+ □ setupLight, support more materials, not only from Bundle
+ □ Check unbind vaos with => gl.bindVertexArray(null);
+
+ □ create function for clear gl parameter on classes
+
+ □ Fix right button fucks everything up

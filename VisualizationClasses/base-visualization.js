@@ -34,9 +34,9 @@ class BaseVisualization {
 	}
 
 	configGL() {
-		gl.useProgram(this._shaders[selectedShader]);
+		gl.useProgram(this._shaders[this._selectedShader]);
 		this.loadUniform();
-		gl.bindVertexArray(vao[selectedShader]);
+		gl.bindVertexArray(this._vao[this._selectedShader]);
 	}
 
 	loadUniform() { consolog.log("Not implemented in: " + this); }
@@ -47,10 +47,7 @@ class BaseVisualization {
 	set draw(draw) { this._draw = draw; }
 
 	get drawBB() { return this._drawBB; }
-	set drawBB(drawBB) { 
-		this._drawBB = drawBB; 
-		this._boundingBox.draw = drawBB;
-	}
+	set drawBB(drawBB) { this._drawBB = drawBB; }
 
 	get selectedShader() { return this._selectedShader; }
 	set selectedShader(idShader) { 
@@ -112,7 +109,7 @@ class BaseVisualization {
 
 	updateReferenceToShader(shaderMap) {
 		this._shaders = shaderMap.get(typeof(this));
-		if (this._boundingBox != null) {
+		if (this._boundingBox) {
 			this._boundingBox.updateReferenceToShader(shaderMap);
 		}
 	}
