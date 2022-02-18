@@ -32,14 +32,15 @@ class CoordinateSystem extends BaseVisualization{
 		this._modelMat.set(modelMat2,16*2);
 		this._color = new Float32Array([1,0,0,1, 0,1,0,1, 0,0,1,1]);
 
-		this.loadGLBuffers();
-		this.vertexAttribPointer();
+		this.loadOpenGLData();
 	}
 
-	cleanOpenGl() {
-		gl.deleteVertexArray(this._vao[0]);
-		gl.deleteBuffer(this._vbo[0]);
-		gl.deleteBuffer(this._ebo[0]);
+	cleanOpenGL() {
+		try {
+			gl.deleteVertexArray(this._vao[0]);
+			gl.deleteBuffer(this._vbo[0]);
+			gl.deleteBuffer(this._ebo[0]);
+		} catch(error) { console.log(error); }
 
 		this._vao.length = 0;
 		this._vbo.length = 0;
@@ -143,6 +144,11 @@ class CoordinateSystem extends BaseVisualization{
 		cs._elementLength = elements.length;
 	}
 
+	loadOpenGLData() {
+		this.loadGLBuffers();
+		this.vertexAttribPointer();
+	}
+
 	loadGLBuffers() {
 		this._vao.push(gl.createVertexArray());
 
@@ -175,6 +181,9 @@ class CoordinateSystem extends BaseVisualization{
 
 		gl.enableVertexAttribArray(positionAttrib);
 		gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+
+		// unbind vao
+		gl.bindVertexArray(null);
 	}
 
 	loadUniform() {
@@ -185,10 +194,17 @@ class CoordinateSystem extends BaseVisualization{
 	drawSolid() {
 		this.configGL();
 
-		gl.drawElementsInstanced(gl.TRIANGLES, this._elementLength, gl.UNSIGNED_SHORT, 0, 3)
+		gl.drawElementsInstanced(gl.TRIANGLES, this._elementLength, gl.UNSIGNED_SHORT, 0, 3);
+
+		// unbind vao
+		gl.bindVertexArray(null);
 	}
 
 	static createProgram() {
 		return [createShaderProgram("coordinate-system", "standard-fragment")];
+	}
+
+	updateReferenceToShader(shaderProgram) {
+		this._shaders = shaderProgram;
 	}
 }

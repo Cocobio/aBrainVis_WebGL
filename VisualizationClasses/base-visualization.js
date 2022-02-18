@@ -108,7 +108,7 @@ class BaseVisualization {
 	}
 
 	updateReferenceToShader(shaderMap) {
-		this._shaders = shaderMap.get(typeof(this));
+		this._shaders = shaderMap[this._type];
 		if (this._boundingBox) {
 			this._boundingBox.updateReferenceToShader(shaderMap);
 		}

@@ -1,4 +1,8 @@
 class BoundingBox extends BaseVisualization {
+	static _vao = [];
+	static _vbo = [];
+	static _ebo = [];
+
 	constructor(shaderMap, vDim, vCenter) {
 		super(null);
 
@@ -17,6 +21,11 @@ class BoundingBox extends BaseVisualization {
 		this.calculateBBModel();
 		glMatrix.mat4.identity(this._modelMat);
 
+		// this.loadOpenGLData();
+
+	}
+
+	loadOpenGLData() {
 		this.loadGLBuffers();
 		this.vertexAttribPointer();
 
@@ -96,6 +105,19 @@ class BoundingBox extends BaseVisualization {
 
 		this.configGL();
 		gl.drawElements(gl.LINES, 24, gl.UNSIGNED_SHORT, 0);
+		gl.bindVertexArray(null);
+	}
+
+	cleanOpenGL() {
+		try {
+			gl.deleteVertexArray(this._vao[0]);
+			gl.deleteBuffer(this._vbo[0]);
+			gl.deleteBuffer(this._ebo[0]);
+		} catch(error) { console.log(error); }
+
+		this._vao.length = 0;
+		this._vbo.length = 0;
+		this._ebo.length = 0;
 	}
 
 	static createProgram() {

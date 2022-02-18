@@ -1,13 +1,24 @@
- □ Mouse actions
- □ Keybord actions
- □ Prepare for context lost
+ ✔ Mouse and touch actions @done (17-02-22 22:51)
+   □ Mejorar el orbit con mouse.
+ ✔ Keybord actions @done (17-02-22 01:56)
+ ✔ Fixes for context lost @done (16-02-22 23:53)
 
- □ setupLight, support more materials, not only from Bundle
- □ Check unbind vaos with => gl.bindVertexArray(null);
+ ✔ setupLight, support more materials, not only from Bundle @done (16-02-22 22:33)
+ ✔ Check unbind vaos with => gl.bindVertexArray(null); @done (16-02-22 22:47)
 
- □ create function for clear gl parameter on classes
+ ✔ create function for clear gl parameter on classes @done (16-02-22 23:59)
 
- □ Fix right button fucks everything up
-   □ Not working in OSX
-   □ Nor mobile devices
-     □ Program mouse use with PointEvents
+ ✔ BoundingBox only one vao, vbo and ebo @done (17-02-22 01:56)
+
+ ✔ Fix right button fucks everything up @done (17-02-22 00:00)
+   ✔ Not working in OSX @done (17-02-22 22:53)
+   ✔ Nor mobile devices @done (17-02-22 00:00)
+     ✔ Program mouse use with PointEvents @done (17-02-22 22:51)
+
+□ open local files
+  □ webgl 1 context workaround
+
+□ Add support for magic mouse (apple)
+  □ Change right click to panning on camera.
+
+□ Shaders should be static on the visualization classes.

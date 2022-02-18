@@ -3,6 +3,7 @@
 <head>
 	<title>aBrainVis</title>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 	<script id="bundle" type="x-shader/x-vertex">#version 300 es
 
@@ -101,26 +102,23 @@
 		void main() {
 			outColor = color;
 		}
-	</script>	
-
-	<!-- <script type="text/javascript" src="webgl-debug.js"></script> -->
-
+	</script>
 	
-	<!-- Classes and utilities -->
+	<!-- Utilities -->
 	<script type="text/javascript" src="Utilities/gl-matrix.js"></script>
 	<script type="text/javascript" src="Utilities/spherical-camera.js"></script>
-
-	<script type="text/javascript" src="VisualizationClasses/base-visualization.js"></script>
-	<script type="text/javascript" src="VisualizationClasses/coordinate-system.js"></script>
-	<script type="text/javascript" src="VisualizationClasses/bundle.js"></script>
-	<script type="text/javascript" src="VisualizationClasses/boundingbox.js"></script>
-
 	<script type="text/javascript" src="Utilities/abrain-utilities.js"></script>
 
 	<!-- Utilities on WebGL -->
 	<script type="text/javascript" src="Utilities/webgl-utils.js"></script>
 
-	<!-- Only for debugin -->
+	<!-- Visualization classes -->
+	<script type="text/javascript" src="VisualizationClasses/base-visualization.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/coordinate-system.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/bundle.js"></script>
+	<script type="text/javascript" src="VisualizationClasses/boundingbox.js"></script>
+
+	<!-- Only for debugin ===> Comment on deploy -->
 	<script type="text/javascript" src="Utilities/webgl-debug.js"></script>
 
 	<!-- Main and setup -->
@@ -128,7 +126,7 @@
 </head>
 
 <body onload="startup();">
-	<canvas id="myGLCanvas" width="500" height="500"></canvas>
+	<canvas id="myGLCanvas" style="touch-action:none"></canvas>
 
 	<!-- <input type="file" id="avatar" name="avatar" accept="bundles/bundles, TRK/trk, TCK/tck"> -->
 </body>

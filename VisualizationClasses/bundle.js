@@ -71,6 +71,8 @@ class Bundle extends BaseVisualization {
 		this.loadGLBuffers();
 		this.vertexAttribPointer();
 		this.updateEBO();
+
+		this._boundingBox.loadOpenGLData();
 	}
 
 	async readData() {
@@ -225,9 +227,7 @@ class Bundle extends BaseVisualization {
 	}
 
 	loadColorTexture() {
-		if (this._hColorTableTexture == null) {
-			this._hColorTableTexture = gl.createTexture();
-		}
+		this._hColorTableTexture = gl.createTexture();
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this._hColorTableTexture);
@@ -235,9 +235,6 @@ class Bundle extends BaseVisualization {
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		// let bgColor = [1.0, 1.0, 1.0, 1.0];
-		// gl.texParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, new Float32Array(bgColor), 0);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -258,25 +255,21 @@ class Bundle extends BaseVisualization {
 		// VBO
 		// Vertex Data
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo[0]);
-		// console.log(this._vertices);
-		// gl.bufferData(gl.ARRAY_BUFFER, 4*this._vertices.length, this._vertices, gl.STATIC_DRAW);
 		gl.bufferData(gl.ARRAY_BUFFER, this._vertices, gl.STATIC_DRAW);
 
 		// Normals
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo[1]);
-		// gl.bufferData(gl.ARRAY_BUFFER, 4*this._normals.length, this._normals, gl.STATIC_DRAW);
 		gl.bufferData(gl.ARRAY_BUFFER, this._normals, gl.STATIC_DRAW);
 
 		// Colors Ids
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo[2]);
-		// gl.bufferData(gl.ARRAY_BUFFER, 4*this._colorIds.length, this._colorIds, gl.STATIC_DRAW);
 		gl.bufferData(gl.ARRAY_BUFFER, this._colorIds.subarray(0), gl.STATIC_DRAW);
 
 		// EBO
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ebo[0]);
-		// gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, 4*this._elements.length, this._elements, gl.STATIC_DRAW);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this._elements, gl.STATIC_DRAW);
 
+		// unbind vao
 		gl.bindVertexArray(null);
 	}
 
@@ -309,7 +302,7 @@ class Bundle extends BaseVisualization {
 		// EBO
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ebo[0]);
 
-		// // Unlink VAO
+		// unbind vao
 		gl.bindVertexArray(null);
 	}
 
@@ -326,6 +319,8 @@ class Bundle extends BaseVisualization {
 
 		gl.drawElements(gl.LINE_STRIP, this._elementLength, gl.UNSIGNED_INT, 0);
 
+		// unbind vao
+		gl.bindVertexArray(null);
 
 		this._boundingBox.drawSolid();
 	}
@@ -333,19 +328,23 @@ class Bundle extends BaseVisualization {
 	drawTransparent() {}
 
 	cleanOpenGL() {
-		gl.deleteBuffer(this._vao[0]);
-		gl.deleteBuffer(this._vbo[0]);
-		gl.deleteBuffer(this._vbo[1]);
-		gl.deleteBuffer(this._vbo[2]);
-		gl.deleteBuffer(this._ebo[0]);
+		try {
+			gl.deleteBuffer(this._vao[0]);
+			gl.deleteBuffer(this._vbo[0]);
+			gl.deleteBuffer(this._vbo[1]);
+			gl.deleteBuffer(this._vbo[2]);
+			gl.deleteBuffer(this._ebo[0]);
 
-		gl.deleteTexture(this._hColorTableTexture);
-
+			gl.deleteTexture(this._hColorTableTexture);
+		} catch(error) { console.log(error); };
+		
 		this._vao.length = 0;
 		this._vbo.length = 0;
 		this._ebo.length = 0;
 
 		this._hColorTableTexture = null;
+
+		this._boundingBox.cleanOpenGL();
 	}
 
 	get fileName() { return this._name; }
@@ -355,9 +354,9 @@ class Bundle extends BaseVisualization {
 		gl.bindVertexArray(this._vao[0]);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ebo[0]);
 
-		// gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, 4*this._elementLength, this._elements, gl.STATIC_DRAW);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this._elements, gl.STATIC_DRAW);
 
+		// unbind vao
 		gl.bindVertexArray(null);
 	}
 
