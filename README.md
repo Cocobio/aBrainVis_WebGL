@@ -5,6 +5,12 @@ This is a project with the graphical engine of aBrainVis, an Android app. It run
 The latest stable version runs in [github pages](https://cocobio.github.io/aBrainVis_WebGL/).
 
 
+## aBrainVis v1.2.1
+- ~~Fix parser with regex (Miguel's data). ~~
+- Better parsing of .bundles header. Using JSON parser.
+- Change right click to panning on camera.
+- Turn shaders into static inside the visualization objects.
+
 ## aBrainVis v1.2.0
 - Local file loader.
 - Dynamic valid files extensions (dependent on the visualization classes).
@@ -43,10 +49,12 @@ The latest stable version runs in [github pages](https://cocobio.github.io/aBrai
 
 - Workaround some bug with pointerMove event firing with out change on the pointers (creating undefined values).
 
+
 ## aBrainVis v1.0.1 - v1.0.2
 #### Debugging update:
 - v1.0.2 runs faster than v1.0.1.
 - Working some issues with compatibility on OSX and mobile devices.
+
 
 ## aBrainVis v1.0
 #### Running prototype:

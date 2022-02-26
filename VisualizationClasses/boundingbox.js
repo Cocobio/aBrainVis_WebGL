@@ -2,14 +2,13 @@ class BoundingBox extends BaseVisualization {
 	static _vao = [];
 	static _vbo = [];
 	static _ebo = [];
+	static _type = BoundingBox.name;
 
-	constructor(shaderMap, vDim, vCenter) {
+	constructor(vDim, vCenter) {
 		super(null);
 
-		this._type = BoundingBox.name;
-
-		this._shaders = shaderMap[this._type];
-		this._shaderN = this._shaders.length;
+		// this._shaders = shaderMap[this._type];
+		// this._shaderN = this._shaders.length;
 
 		this._dim = new Float32Array(vDim);
 		this._center = new Float32Array(vCenter);
@@ -58,10 +57,10 @@ class BoundingBox extends BaseVisualization {
 	}
 
 	vertexAttribPointer() {
-		this._positionAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexPosition");
+		this._positionAttributeLoc = gl.getAttribLocation(BoundingBox._shaders[0], "aVertexPosition");
 
-		this._uniformBBModelMatLoc = gl.getUniformLocation(this._shaders[0], "uBBModel");
-		this._uniformModelMatLoc = gl.getUniformLocation(this._shaders[0], "uModel");
+		this._uniformBBModelMatLoc = gl.getUniformLocation(BoundingBox._shaders[0], "uBBModel");
+		this._uniformModelMatLoc = gl.getUniformLocation(BoundingBox._shaders[0], "uModel");
 
 		gl.enableVertexAttribArray(this._positionAttributeLoc);
 		gl.vertexAttribPointer(this._positionAttributeLoc, 3, gl.FLOAT, false, 0, 0);

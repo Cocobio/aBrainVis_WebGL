@@ -98,6 +98,12 @@ function setupShaders() {
 	return shaderMap;
 }
 
+function setupShadersOnClasses() {
+	for (const visClass of visualizationTypes) {
+		visClass.setupReferenceToShader(aBrainGL.shaderKeyMap);
+	}
+}
+
 function setupLightOnShaders() {
 	for (const [visClass, shaderList] of Object.entries(aBrainGL.shaderKeyMap)) {
 		for (const shader of shaderList) {
@@ -250,6 +256,7 @@ function startup() {
 
 	// Preparing all shaders
 	aBrainGL.shaderKeyMap = setupShaders();
+	setupShadersOnClasses();
 
 	setupLightOnShaders();
 	setupViewMat();
@@ -275,10 +282,10 @@ function startup() {
 
 	// Default visualization obj
 	aBrainGL.defaultFile = "resources/atlas.bundles";
-	aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, aBrainGL.defaultFile));
-	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, ["https://www.dropbox.com/s/iz7ly7vyhj3mogp/fibers_input.tck?dl=1", "fileData[1][0].tck"]));
+	aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.defaultFile));
+	// aBrainGL.visualizationObjects.push(new Bundle(0, ["https://www.dropbox.com/s/iz7ly7vyhj3mogp/fibers_input.tck?dl=1", "fileData[1][0].tck"]));
 	// aBrainGL.defaultFile = "resources/001_SWM_Left_segmentation.bundles";
-	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, aBrainGL.defaultFile));
+	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.defaultFile));
 		
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(backgroundColor[0],backgroundColor[1],backgroundColor[2],backgroundColor[3]);
@@ -367,13 +374,13 @@ function handleContextRestored(event) {
 	gl.clearColor(backgroundColor[0],backgroundColor[1],backgroundColor[2],backgroundColor[3]);
 
 	// Fixing coordinate system gl data
-	aBrainGL.coordSystem.updateReferenceToShader(aBrainGL.csShader);
+	CoordinateSystem.setupReferenceToShader(aBrainGL.csShader);
 	aBrainGL.coordSystem.cleanOpenGL();
 	aBrainGL.coordSystem.loadOpenGLData();
 
 	// Recreating all data lost from GPU
+	for (const visClass of visualizationTypes) { visClass.setupReferenceToShader(aBrainGL.shaderKeyMap);}
 	for (const obj of aBrainGL.visualizationObjects) {
-		obj.updateReferenceToShader(aBrainGL.shaderKeyMap);
 		obj.cleanOpenGL();
 		obj.loadOpenGLData();
 	}
@@ -588,7 +595,7 @@ function handlePointerDown(event) {
 		if (event.button == 0) {
 			aBrainGL.orbit = true;
 			aBrainGL.pan = false;
-		} else if (event.button == 1) {
+		} else if (event.button == 1 || event.button == 2) {
 			aBrainGL.orbit = false;
 			aBrainGL.pan = true;
 		} else { 
@@ -609,7 +616,7 @@ function handlePointerUp(event) {
 	if (event.pointerType == "mouse") {
 		if (event.button == 0) {
 			aBrainGL.orbit = false;
-		} else if (event.button == 1) {
+		} else if (event.button == 1 || event.button == 2) {
 			aBrainGL.pan = false;
 		} else { return; }
 	} else if (event.pointerType == "touch") {
@@ -675,7 +682,7 @@ function handleAddFile(event) {
 				if (loaders.length == 1) { VisObj = loaders[0]; }
 				else { alert("Multiple classes can load file \'"+fileData[1][0]+"\'. Must select a class *** not implemented yet ***."); }
 
-				aBrainGL.visualizationObjects.push(new VisObj(0, aBrainGL.shaderKeyMap, [urls, fileData[1][0].name]));
+				aBrainGL.visualizationObjects.push(new VisObj(0, [urls, fileData[1][0].name]));
 			}
 		}
 

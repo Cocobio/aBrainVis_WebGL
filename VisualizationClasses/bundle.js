@@ -7,11 +7,11 @@ class Bundle extends BaseVisualization {
 										[ 'tck', "_readTck"],
 										[ 'trk', "_readTrk"]
 										]);
+	static _type = Bundle.name;
 
-	constructor(intId, shaderMap, file) {
+	constructor(intId, file) {
 		super(intId);
 
-		this._type += Bundle.name;
 
 		this._curvesCount = 0;
 		this._bundlesNames = [];
@@ -53,10 +53,10 @@ class Bundle extends BaseVisualization {
 
 
 		// Shaders info
-		this._shaders = shaderMap[this._type];
-		this._shaderN = this._shaders.length; // No hay geometry shader en WebGL 2.0
+		// this._shaders = shaderMap[this._type];
+		// this._shaderN = this._shaders.length; // No hay geometry shader en WebGL 2.0
 
-		this._boundingBox = new BoundingBox(shaderMap, [0,0,0], [0,0,0]);
+		this._boundingBox = new BoundingBox([0,0,0], [0,0,0]);
 
 		// Read and prepare array buffers
 		this.finishingTouches();
@@ -506,7 +506,9 @@ class Bundle extends BaseVisualization {
 		} else {
 			data = await loadFile(this._path[0],'text');
 		}
-		let headerDict = parsePythonDict(data);
+		// let headerDict = parsePythonDict(data);
+		let json = data.substring(13).replace(/\'/g, "\"");
+		let headerDict = JSON.parse(json);
 
 		this._curvesCount = headerDict.curves_count;
 
@@ -708,15 +710,15 @@ class Bundle extends BaseVisualization {
 
 	vertexAttribPointer() {
 		// Pointers to attributes
-		this._positionAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexPosition");
-		this._normalAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexNormal");
-		this._colorAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexColorId");
+		this._positionAttributeLoc = gl.getAttribLocation(Bundle._shaders[0], "aVertexPosition");
+		this._normalAttributeLoc = gl.getAttribLocation(Bundle._shaders[0], "aVertexNormal");
+		this._colorAttributeLoc = gl.getAttribLocation(Bundle._shaders[0], "aVertexColorId");
 
-		this._uniformModelMatLoc = gl.getUniformLocation(this._shaders[0], "uModel");
-		this._uniformColorTexLoc = gl.getUniformLocation(this._shaders[0], "uColorTable");
+		this._uniformModelMatLoc = gl.getUniformLocation(Bundle._shaders[0], "uModel");
+		this._uniformColorTexLoc = gl.getUniformLocation(Bundle._shaders[0], "uColorTable");
 
 		// Only with webgl1 value will matter
-		this._uniformTextureLengthLoc = gl.getUniformLocation(this._shaders[0], "uTextureLength");
+		this._uniformTextureLengthLoc = gl.getUniformLocation(Bundle._shaders[0], "uTextureLength");
 
 		// Vertex position
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo[0]);
@@ -868,11 +870,9 @@ class Bundle extends BaseVisualization {
 		this.createNewEBO();
 	}
 
-	static updateMaterialValues(shaderMap) {
-		shaderList = shaderMap.get(typeof(Bundle));
-
-		for (let i=0; i<shaderList.length; i++) {
-			gl.useProgram(shaderList[i]);
+	static updateMaterialValues() {
+		for (let i=0; i<this._shaders.length; i++) {
+			gl.useProgram(this._shaders[i]);
 			glUniform1f(gl.getUniformLocation("uMaterial.Ka"), this._material[0]);
 			glUniform1f(gl.getUniformLocation("uMaterial.Kd"), this._material[1]);
 			glUniform1f(gl.getUniformLocation("uMaterial.Ks"), this._material[2]);

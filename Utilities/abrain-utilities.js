@@ -12,7 +12,7 @@ function parsePythonDict(dictStr) {
 	/// decimal number \d+
 	/// list \[[\'\s\w\*\.,]*\]
 	/// dict attributes\s*=\s*\{[\'\s\w\*\.,]*\}
-	let attributes = striped.split(/\s*(\'[\s\w\*\.]*\'|\d+|\[[\'\s\w\*\.,]*\])\s*:\s*(\'[\s\w\*\.]*\'|\d+|\[[\'\s\w\*\.,]*\])\s*,*/); 
+	let attributes = striped.split(/\s*(\'[\s\w\*\.\-]*\'|\d+|\[[\'\s\w\*\.\-,]*\])\s*:\s*(\'[\s\w\*\.\-]*\'|\d+|\[[\'\s\w\*\.\-,]*\])\s*,*/); 
 
 	for (let i=attributes.length-1; i>=0;i--) {
 		if (attributes[i].length == 0) {

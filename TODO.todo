@@ -2,27 +2,24 @@
 
 □ resize using gl parameters (the object 'gl')
 
-□ Mejorar el orbit con mouse.
-
-□ Change right click to panning on camera.
-
-□ Turn shaders into static inside the visualization objects.
-
-
-□ Revisar el parseador de dicts (datos Miguel).
+□ Improve orbit with mouse.
 
 □ URL to dropbox - drive - etc.
-
 □ Loader from url?
 	□ Output link with files loaded**
 
+aBrainVis v1.2.1:
+✔ Fix parser with regex (Miguel's data). @done (26-02-22 13:09)
+✔ Change right click to panning on camera. @done (26-02-22 13:17)
+✔ Turn shaders into static inside the visualization objects. @done (26-02-22 14:17)
+✔	Better parsing of .bundles header. Using JSON parser. @done (26-02-22 14:30)
 
 aBrainVis v1.2.0:
 	✔ Delete files button. @done (24-02-22 02:17)
 	✔ TRK & TCK loader. @done (25-02-22 21:17)
 
 	✔ open local files @done (20-02-22 16:48)
-		✔	Valid input file extensions are being fetch from VisualizationClassesActualizar @done (20-02-22 19:33)
+		✔	Valid input file extensions are being fetch from VisualizationClasses @done (20-02-22 19:33)
 
 	✔ webgl 1 context workaround @done (22-02-22 00:47)
 

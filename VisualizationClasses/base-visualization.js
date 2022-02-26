@@ -1,10 +1,10 @@
 class BaseVisualization {
 	static _shaders = [];
 	static _shaderN = 1;
+	static _type = '';
 
 	constructor(intId) {
 		this._id = intId;
-		this._type = '';
 
 		this._vao = [];
 		this._vbo = [];
@@ -42,13 +42,13 @@ class BaseVisualization {
 	}
 
 	configGL() {
-		gl.useProgram(this._shaders[this._selectedShader]);
+		gl.useProgram(this["constructor"]._shaders[this._selectedShader]);
 		this.loadUniform();
 		gl.bindVertexArray(this._vao[this._selectedShader]);
 	}
 
 	configWebGL1() {
-		gl.useProgram(this._shaders[this._selectedShader]);
+		gl.useProgram(this["constructor"]._shaders[this._selectedShader]);
 		this.loadUniform();
 		this.bindBufferAttribPointers();
 	}
@@ -126,10 +126,8 @@ class BaseVisualization {
 		glMatrix.mat4.identity(this._scaleMat);
 	}
 
-	updateReferenceToShader(shaderMap) {
+	static setupReferenceToShader(shaderMap) {
 		this._shaders = shaderMap[this._type];
-		if (this._boundingBox) {
-			this._boundingBox.updateReferenceToShader(shaderMap);
-		}
+		this._shaderN = this._shaders.length;
 	}
 }

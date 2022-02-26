@@ -4,7 +4,7 @@ class CoordinateSystem extends BaseVisualization{
 	constructor(shaderProgram) {
 		super(null);
 
-		this._shaders = shaderProgram;
+		CoordinateSystem._shaders = shaderProgram;
 
 		///// Arrow values /////
 		this.cilinderRadius = 0.015;
@@ -173,13 +173,13 @@ class CoordinateSystem extends BaseVisualization{
 	}
 
 	vertexAttribPointer() {
-		this._positionAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexPosition");
+		this._positionAttributeLoc = gl.getAttribLocation(CoordinateSystem._shaders[0], "aVertexPosition");
 
-		this._uniformColorArrayLoc = gl.getUniformLocation(this._shaders[0], "uColorArray");
-		this._uniformMMatrixArrayLoc = gl.getUniformLocation(this._shaders[0], "uModelArray");
+		this._uniformColorArrayLoc = gl.getUniformLocation(CoordinateSystem._shaders[0], "uColorArray");
+		this._uniformMMatrixArrayLoc = gl.getUniformLocation(CoordinateSystem._shaders[0], "uModelArray");
 
 		// Only with webgl1 value will matter
-		this._uniformAxisIDLoc = gl.getUniformLocation(this._shaders[0], "uAxisID");
+		this._uniformAxisIDLoc = gl.getUniformLocation(CoordinateSystem._shaders[0], "uAxisID");
 
 		gl.enableVertexAttribArray(this._positionAttributeLoc);
 		gl.vertexAttribPointer(this._positionAttributeLoc, 3, gl.FLOAT, false, 0, 0);
@@ -236,7 +236,7 @@ class CoordinateSystem extends BaseVisualization{
 
 	}
 
-	updateReferenceToShader(shaderProgram) {
+	static setupReferenceToShader(shaderProgram) {
 		this._shaders = shaderProgram;
 	}
 }
