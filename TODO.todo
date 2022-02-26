@@ -1,24 +1,57 @@
- ✔ Mouse and touch actions @done (17-02-22 22:51)
-   □ Mejorar el orbit con mouse.
- ✔ Keybord actions @done (17-02-22 01:56)
- ✔ Fixes for context lost @done (16-02-22 23:53)
+✘ Add support for magic mouse (apple) @cancelled (22-02-22 00:48)
 
- ✔ setupLight, support more materials, not only from Bundle @done (16-02-22 22:33)
- ✔ Check unbind vaos with => gl.bindVertexArray(null); @done (16-02-22 22:47)
+□ resize using gl parameters (the object 'gl')
 
- ✔ create function for clear gl parameter on classes @done (16-02-22 23:59)
+□ Mejorar el orbit con mouse.
 
- ✔ BoundingBox only one vao, vbo and ebo @done (17-02-22 01:56)
+□ Change right click to panning on camera.
 
- ✔ Fix right button fucks everything up @done (17-02-22 00:00)
-   ✔ Not working in OSX @done (17-02-22 22:53)
-   ✔ Nor mobile devices @done (17-02-22 00:00)
-     ✔ Program mouse use with PointEvents @done (17-02-22 22:51)
+□ Turn shaders into static inside the visualization objects.
 
-□ open local files
-  □ webgl 1 context workaround
 
-□ Add support for magic mouse (apple)
-  □ Change right click to panning on camera.
+□ Revisar el parseador de dicts (datos Miguel).
 
-□ Shaders should be static on the visualization classes.
+□ URL to dropbox - drive - etc.
+
+□ Loader from url?
+	□ Output link with files loaded**
+
+
+aBrainVis v1.2.0:
+	✔ Delete files button. @done (24-02-22 02:17)
+	✔ TRK & TCK loader. @done (25-02-22 21:17)
+
+	✔ open local files @done (20-02-22 16:48)
+		✔	Valid input file extensions are being fetch from VisualizationClassesActualizar @done (20-02-22 19:33)
+
+	✔ webgl 1 context workaround @done (22-02-22 00:47)
+
+	✔ Fill entire webpage with the WebGL 2 context. @done (18-02-22 00:32)
+
+aBrainVis v1.1:
+	✔ Shaders should be static on the visualization classes. @done (18-02-22 00:54)
+
+	 ✔ Mouse and touch actions @done (17-02-22 22:51)
+	 ✔ Keybord actions @done (17-02-22 01:56)
+	 ✔ Fixes for context lost @done (16-02-22 23:53)
+
+	 ✔ setupLight, support more materials, not only from Bundle @done (16-02-22 22:33)
+	 ✔ Check unbind vaos with => gl.bindVertexArray(null); @done (16-02-22 22:47)
+
+	 ✔ create function for clear gl parameter on classes @done (16-02-22 23:59)
+
+	 ✔ BoundingBox only one vao, vbo and ebo @done (17-02-22 01:56)
+
+	 ✔ Fix right button fucks everything up @done (17-02-22 00:00)
+		 ✔ Not working in OSX @done (17-02-22 22:53)
+		 ✔ Nor mobile devices @done (17-02-22 00:00)
+			 ✔ Program mouse use with PointEvents @done (17-02-22 22:51)
+
+
+
+Future work:
+	□	Meshes & MRI
+	□	Meshes load with textures.
+
+	□	Load colors (not random) or reshuffle colors.
+		□	Reload random colors

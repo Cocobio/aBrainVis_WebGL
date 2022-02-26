@@ -1,4 +1,7 @@
 class BaseVisualization {
+	static _shaders = [];
+	static _shaderN = 1;
+
 	constructor(intId) {
 		this._id = intId;
 		this._type = '';
@@ -10,10 +13,10 @@ class BaseVisualization {
 		this._path = '';
 		this._name = '';
 
-		this._shaders = [];
+		// this._shaders = [];
 		this._selectedShader = 0;
 
-		this._shaderN = 1;
+		// this._shaderN = 1;
 
 		this._modelMat = glMatrix.mat4.create();
 		this._inverseModelMat = glMatrix.mat4.create();
@@ -31,6 +34,11 @@ class BaseVisualization {
 		this._boundingBox = null;
 
 		this.resetModelMat();
+
+		if (aBrainGL.contextType != "webgl2") {
+			this.configGL = this.configWebGL1;
+			this.drawSolid = this.drawSolid_WebGL1;
+		}
 	}
 
 	configGL() {
@@ -39,7 +47,18 @@ class BaseVisualization {
 		gl.bindVertexArray(this._vao[this._selectedShader]);
 	}
 
-	loadUniform() { consolog.log("Not implemented in: " + this); }
+	configWebGL1() {
+		gl.useProgram(this._shaders[this._selectedShader]);
+		this.loadUniform();
+		this.bindBufferAttribPointers();
+	}
+
+	drawSolid() { console.log("Not implemented in: "+this); }
+	drawSolid_WebGL1() { console.log("Not implemented in: "+this); }
+
+	bindBufferAttribPointers() { console.log("Not implemented in: "+this); }
+
+	loadUniform() { console.log("Not implemented in: " + this); }
 
 	get id() { return this._id; }
 

@@ -46,8 +46,8 @@ function createGLContext(canvas) {
 	}
 
 	if (context) {
-		context.viewportWidth = canvas.width;
-		context.viewportHeight = canvas.height;
+		aBrainGL.viewportWidth = canvas.width;
+		aBrainGL.viewportHeight = canvas.height;
 	}
 	else {
 		alert("Failed to create WebGL context!");
@@ -169,7 +169,7 @@ function draw(currentTime) {
 	aBrainGL.requestAnimId = requestAnimFrame(draw,canvas);
 
 	// Main draw (objects)
-	gl.viewport(0,0,gl.viewportWidth, gl.viewportHeight);
+	gl.viewport(0, 0, aBrainGL.viewportWidth, aBrainGL.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	for (const obj of aBrainGL.visualizationObjects) {
@@ -178,20 +178,49 @@ function draw(currentTime) {
 
 	// Draw coordinate system
 	gl.clear(gl.DEPTH_BUFFER_BIT);
-	gl.viewport(0,0,150,150);
+	gl.viewport(0,0,aBrainGL.csViewport,aBrainGL.csViewport);
 
 	aBrainGL.coordSystem.drawSolid();
 }
 
+// function resizeCanvasToDisplaySize() {
+// 	let width = gl.canvas.clientWidth;
+// 	let height = gl.canvas.clientHeight;
+	
+// 	if (gl.canvas.width != width || gl.canvas.height != height) {
+// 		gl.canvas.width = width;
+// 		gl.canvas.height = height;
+
+// 		let smaller = aBrainGL.viewportWidth;
+// 		if (smaller > aBrainGL.viewportHeight) { smaller = aBrainGL.viewportHeight; }
+
+// 		aBrainGL.csViewport = smaller*aBrainGL.csFactor;
+
+// 		let aspect = canvas.clientWidth / canvas.clientHeight;
+
+// 		glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aspect, 0.01, 1000.0);
+// 		configPerspective();
+// 	}
+// }
 
 function resize() {
-	canvas.width = window.innerWidth-20;
-	canvas.height = window.innerHeight-20;
+	// let width = gl.canvas.clientWidth;
+	// let height = gl.canvas.clientHeight;
 
-	gl.viewportWidth = canvas.width;
-	gl.viewportHeight = canvas.height;
+	// gl.canvas.width = width;
+	// gl.canvas.height = height;
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
 
-	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, gl.viewportWidth/gl.viewportHeight, 0.01, 1000.0);
+	aBrainGL.viewportWidth = canvas.width;
+	aBrainGL.viewportHeight = canvas.height;
+
+	let smaller = aBrainGL.viewportWidth;
+	if (smaller > aBrainGL.viewportHeight) { smaller = aBrainGL.viewportHeight; }
+
+	aBrainGL.csViewport = smaller*aBrainGL.csFactor;
+
+	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
 	configPerspective();
 }
 
@@ -200,14 +229,24 @@ function startup() {
 	// Visualization obj list
 	aBrainGL.visualizationObjects = [];
 
+	// Stretch viewport to device's real size
+	stretchViewport();
+
 	// Gl context and lib
 	canvas = document.getElementById("myGLCanvas");
 	// canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
-	canvas.width = window.innerWidth-20;
-	canvas.height = window.innerHeight-20;
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
 
 	gl = createGLContext(canvas);
 	// gl = WebGLDebugUtils.makeDebugContext(createGLContext(canvas));
+
+	// Alert user if its not running on WebGL 2.0
+	if (aBrainGL.contextType != 'webgl2') {
+		alert("Browser or device not compatible with WebGL 2.0. Currently running on WebGL1 ("+aBrainGL.contextType+").");
+		gl.getExtension('OES_element_index_uint');
+		gl.getExtension('OES_texture_float');
+	}
 
 	// Preparing all shaders
 	aBrainGL.shaderKeyMap = setupShaders();
@@ -216,13 +255,17 @@ function startup() {
 	setupViewMat();
 
 	// Perspective Matrix
+	aBrainGL.csFactor = 0.2;
+	aBrainGL.csViewport = aBrainGL.viewportWidth < aBrainGL.viewportHeight ? aBrainGL.viewportWidth : aBrainGL.viewportHeight;
+	aBrainGL.csViewport *= aBrainGL.csFactor;
+
 	aBrainGL.FOV_DEFAULT = glMatrix.glMatrix.toRadian(45.0);
 	aBrainGL.FOV_FLOOR_LIMITER = glMatrix.glMatrix.toRadian(1.0);
 	aBrainGL.FOV_CEIL_LIMITER = glMatrix.glMatrix.toRadian(160.0);
 	aBrainGL.fov = aBrainGL.FOV_DEFAULT;
 	aBrainGL.projMat = glMatrix.mat4.create();
 	aBrainGL.csProjMat = glMatrix.mat4.create();
-	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, gl.viewportWidth/gl.viewportHeight, 0.01, 1000.0);
+	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
 	glMatrix.mat4.perspective(aBrainGL.csProjMat, glMatrix.glMatrix.toRadian(45.0), 1, 0.01, 10.0);
 
 	configPerspective();
@@ -233,7 +276,7 @@ function startup() {
 	// Default visualization obj
 	aBrainGL.defaultFile = "resources/atlas.bundles";
 	aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, aBrainGL.defaultFile));
-
+	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, ["https://www.dropbox.com/s/iz7ly7vyhj3mogp/fibers_input.tck?dl=1", "fileData[1][0].tck"]));
 	// aBrainGL.defaultFile = "resources/001_SWM_Left_segmentation.bundles";
 	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.shaderKeyMap, aBrainGL.defaultFile));
 		
@@ -249,8 +292,17 @@ function startup() {
 	// Listeners
 	setupListeners();
 
-	// setInterval(draw, 16.7);
+	// Draw call
 	draw();
+}
+
+function stretchViewport() {
+	let width = document.documentElement.clientWidth * window.devicePixelRatio;
+	viewport = document.querySelector("meta[name=viewport]");
+	viewport.setAttribute('content', 'width=' + width);
+
+	document.documentElement.style.transform = 'scale( 1 / window.devicePixelRatio )';
+	document.documentElement.style.transformOrigin = 'top left';
 }
 
 function setupListeners() {
@@ -274,6 +326,23 @@ function setupListeners() {
 	document.addEventListener('pointerdown', handlePointerDown, false);
 	document.addEventListener('pointerup', handlePointerUp, false);	
 	document.addEventListener("pointercancel", handlePointerCancel, false);
+
+	// Buttons
+	document.getElementById("toggleFS").addEventListener("click", handleToggleFullScreen, false);
+	document.getElementById("addFile").addEventListener("change", handleAddFile, false);
+	document.getElementById("deleteAll").addEventListener("click", handleDeleteAll, false);
+
+	// Set valid extensions for files
+	let validExtensions = ""
+	for (const visClass of visualizationTypes) {
+		let extensions = visClass.validFileExtension;
+		if (extensions != undefined) {
+			for (const ext of extensions.keys()) {
+				validExtensions += "."+ext+", "
+			}
+		}
+	}
+	document.getElementById("addFile").accept = validExtensions;
 }
 
 function handleContextLost(event) {
@@ -389,18 +458,18 @@ function handleKeyUp(event) {
 }
 
 function handleWheel(event) {
-	let deltaFov = canvas.height*0.1;
+	let deltaFov = aBrainGL.viewportHeight*0.1;
 
 	if (event.wheelDeltaY > 0) {
 		deltaFov *= -1;
 	}
 
-	aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / canvas.height + 1)));
+	aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / aBrainGL.viewportHeight + 1)));
 
 	if (aBrainGL.fov < aBrainGL.FOV_FLOOR_LIMITER) { aBrainGL.fov = aBrainGL.FOV_FLOOR_LIMITER; }
 	else if (aBrainGL.fov > aBrainGL.FOV_CEIL_LIMITER) { aBrainGL.fov = aBrainGL.FOV_CEIL_LIMITER; }
 
-	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, gl.viewportWidth/gl.viewportHeight, 0.01, 1000.0);
+	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
 
 	configPerspective();
 }
@@ -473,24 +542,24 @@ function handlePointerMove(event) {
 				let avrYPrev = (aBrainGL.activePointers[0].clientY+aBrainGL.activePointers[1].clientY)/2;
 				let avrYNext = (newPointers[0].clientY+newPointers[1].clientY)/2;
 
-				let deltaPanningX_toCenter = (canvas.width - 2*avrXPrev-avrXNext+avrXPrev)/canvas.height*r*Math.tan(aBrainGL.fov/2);
-				let deltaPanningY_toCenter = (canvas.height- 2*avrYPrev-avrYNext+avrYPrev)/canvas.height*r*Math.tan(aBrainGL.fov/2);
+				let deltaPanningX_toCenter = (aBrainGL.viewportWidth - 2*avrXPrev-avrXNext+avrXPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+				let deltaPanningY_toCenter = (aBrainGL.viewportHeight- 2*avrYPrev-avrYNext+avrYPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
 
-				let deltaPanningX_toEnd = (2*avrXNext-canvas.width+avrXNext-avrXPrev)/canvas.height*r*Math.tan(aBrainGL.fov/2);
-				let deltaPanningY_toEnd = (2*avrYNext-canvas.height+avrYNext-avrYPrev)/canvas.height*r*Math.tan(aBrainGL.fov/2);
+				let deltaPanningX_toEnd = (2*avrXNext-aBrainGL.viewportWidth+avrXNext-avrXPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+				let deltaPanningY_toEnd = (2*avrYNext-aBrainGL.viewportHeight+avrYNext-avrYPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
 
 				let deltaFov = Math.sqrt(initTanX*initTanX + initTanY*initTanY) - Math.sqrt(endTanX*endTanX + endTanY*endTanY);
 
 				camera.pan(deltaPanningX_toCenter, deltaPanningY_toCenter);
 				camera.transverseRotation(deltaAngle);
 
-				aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / canvas.height + 1)));
+				aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / aBrainGL.viewportHeight + 1)));
 
 
 				if (aBrainGL.fov < aBrainGL.FOV_FLOOR_LIMITER) { aBrainGL.fov = aBrainGL.FOV_FLOOR_LIMITER; }
 				else if (aBrainGL.fov > aBrainGL.FOV_CEIL_LIMITER) { aBrainGL.fov = aBrainGL.FOV_CEIL_LIMITER; }
 
-				glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, gl.viewportWidth/gl.viewportHeight, 0.01, 1000.0);
+				glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
 				camera.pan(deltaPanningX_toEnd, deltaPanningY_toEnd);
 				csCamera.transverseRotation(deltaAngle);
 
@@ -565,7 +634,64 @@ function handlePointerCancel(event) {
 }
 
 function getTouchData(pointerEvent) {
-  return { 	identifier: pointerEvent.pointerId, 
-  			clientX: pointerEvent.clientX, 
-  			clientY: pointerEvent.clientY };
+	return { 	identifier: pointerEvent.pointerId, 
+				clientX: 	pointerEvent.clientX, 
+				clientY: 	pointerEvent.clientY };
+}
+
+async function handleToggleFullScreen() {
+	let doc = window.document;
+	let docEl = doc.documentElement;
+
+	let requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+	let cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+	if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+		requestFullScreen.call(docEl);//.then(() => console.log(window.innerWidth, window.innerHeight) );
+	}
+	else {
+		cancelFullScreen.call(doc);//.then(() => console.log(window.innerWidth, window.innerHeight) );
+	}
+	// console.log(canvas.width+"\t\t"+canvas.height);
+}
+
+function handleAddFile(event) {
+	const files = addFile.files;
+
+	if (files) {
+		let groupedFiles = groupFiles(files);
+		let missingFiles = [];
+
+		for (const fileData of groupedFiles) {
+			if (fileData[1].findIndex( element => element==undefined) >=0) {
+				let idx = fileData[1].findIndex( element => element!=undefined);
+				missingFiles.push(fileData[1][idx]);
+			} else {
+				//search loader
+				let urls = fileData[1].map(element => URL.createObjectURL(element));
+				let loaders = visualizationTypes.filter(element => element.validFileExtension != undefined && element.validFileExtension.has(fileData[0]));
+				let VisObj;
+
+				if (loaders.length == 1) { VisObj = loaders[0]; }
+				else { alert("Multiple classes can load file \'"+fileData[1][0]+"\'. Must select a class *** not implemented yet ***."); }
+
+				aBrainGL.visualizationObjects.push(new VisObj(0, aBrainGL.shaderKeyMap, [urls, fileData[1][0].name]));
+			}
+		}
+
+		if (missingFiles.length != 0) {
+			let missingFilesStr = "";
+			for (let missingFile of missingFiles) {
+				missingFilesStr += "\n" + missingFile.name; 
+			}
+			alert("Missing files for: " + missingFilesStr);
+		}
+	}
+
+	// Fixes problem when opening same file twice
+	document.getElementById("addFile").value = null;
+}
+
+function handleDeleteAll(event) {
+	aBrainGL.visualizationObjects.length = 0;
 }

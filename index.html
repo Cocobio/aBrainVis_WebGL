@@ -56,6 +56,58 @@
 			gl_Position = uProj*uView*uModel*vec4(aVertexPosition, 1.0);
 		}
 	</script>
+	<script id="bundle-webgl1" type="x-shader/x-vertex">
+		precision highp float;
+		precision highp int;
+
+		attribute vec3 aVertexPosition;
+		attribute vec3 aVertexNormal;
+		attribute float aVertexColorId;
+
+		varying vec4 color;
+
+		uniform sampler2D uColorTable;
+
+		uniform mat4 uModel;
+		uniform mat4 uView;
+		uniform mat4 uProj;
+
+		uniform float uTextureLength;
+
+		struct LightInfo {
+			vec4 pos;				// Posicion de la luz.
+			vec3 La;				// Intensidad de luz ambiental.
+			vec3 Ld;				// Intensidad de luz difusa.
+			vec3 Ls;				// Intensidad de luz especular.
+		};
+		uniform LightInfo uLight;
+
+		struct MaterialInfo {
+			float Ka;				// Reflectividad ambiental.
+			float Kd;				// Reflectividad difusa.
+			float Ks;				// Reflectividad especular.
+			float shininess;		// Coeficiente de reflexion especular.
+		};
+		uniform MaterialInfo uMaterial;
+
+		void main() {
+			// lighting.
+			vec4 p = uView*uModel*vec4(aVertexPosition, 1.0);
+
+			vec3 n = normalize(mat3(uView*uModel)*aVertexNormal);
+			vec3 l = normalize(vec3(uLight.pos - p));
+			vec3 v = normalize(-p.xyz);
+			vec3 r = reflect(-l, n);
+
+			vec3 ambi = uLight.La*uMaterial.Ka;
+			vec3 diff = uLight.Ld*uMaterial.Kd*max( dot(l, n), 0.0);
+			vec3 spec = uLight.Ls*uMaterial.Ks*pow(max(dot(r,v), 0.0), uMaterial.shininess);
+			
+			// outputs
+			color = vec4(ambi + diff + spec, 1.0) * texture2D(uColorTable, vec2((aVertexColorId+0.5)/uTextureLength,0.0));
+			gl_Position = uProj*uView*uModel*vec4(aVertexPosition, 1.0);
+		}
+	</script>
 
 	<script id="coordinate-system" type="x-shader/x-vertex">#version 300 es
 		in vec3 aVertexPosition;
@@ -73,11 +125,45 @@
 			gl_Position = uProj*uView*uModelArray[gl_InstanceID]*vec4(aVertexPosition, 1.0);
 		}
 	</script>
+	<script id="coordinate-system-webgl1" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+
+		varying vec4 color;
+
+		uniform mat4 uModelArray[3];
+		uniform mat4 uView;
+		uniform mat4 uProj;
+
+		uniform int uAxisID;
+
+		uniform vec4 uColorArray[3];
+
+		void main() {
+			color = uColorArray[uAxisID];
+			gl_Position = uProj*uView*uModelArray[uAxisID]*vec4(aVertexPosition, 1.0);
+		}
+	</script>
 
 	<script id="boundingbox" type="x-shader/x-vertex">#version 300 es
 		in vec3 aVertexPosition;
 
 		out vec4 color;
+
+		uniform mat4 uModel;
+		uniform mat4 uBBModel;
+		uniform mat4 uView;
+		uniform mat4 uProj;
+
+
+		void main() {
+			color = vec4(1.0, 1.0, 1.0, 1.0);
+			gl_Position = uProj*uView*uModel*uBBModel*vec4(aVertexPosition, 1.0);
+		}
+	</script>
+	<script id="boundingbox-webgl1" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+
+		varying vec4 color;
 
 		uniform mat4 uModel;
 		uniform mat4 uBBModel;
@@ -103,6 +189,15 @@
 			outColor = color;
 		}
 	</script>
+	<script id="standard-fragment-webgl1" type="x-shader/x-fragment">
+		precision highp float;
+
+		varying vec4 color;
+
+		void main() {
+			gl_FragColor = color;
+		}
+	</script>
 	
 	<!-- Utilities -->
 	<script type="text/javascript" src="Utilities/gl-matrix.js"></script>
@@ -123,12 +218,26 @@
 
 	<!-- Main and setup -->
 	<script type="text/javascript" src="main-setup.js"></script>
+
+	<style >
+		html, body {
+			width:	100%;
+			height:	100%;
+			margin:	0;
+			padding: 0;
+			border: 0;
+			overflow: hidden;
+		}
+	</style>
+
+	<button id="toggleFS">Go fullscreen</button>
+	<input type="file" id="addFile" multiple name="file">
+	<button id="deleteAll">delete</button>
+
 </head>
 
 <body onload="startup();">
 	<canvas id="myGLCanvas" style="touch-action:none"></canvas>
-
-	<!-- <input type="file" id="avatar" name="avatar" accept="bundles/bundles, TRK/trk, TCK/tck"> -->
 </body>
 
 </html>

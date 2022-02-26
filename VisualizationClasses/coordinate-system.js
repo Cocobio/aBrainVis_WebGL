@@ -37,7 +37,9 @@ class CoordinateSystem extends BaseVisualization{
 
 	cleanOpenGL() {
 		try {
-			gl.deleteVertexArray(this._vao[0]);
+			if (aBrainGL.contextType=="webgl2") {
+				gl.deleteVertexArray(this._vao[0]);
+			}
 			gl.deleteBuffer(this._vbo[0]);
 			gl.deleteBuffer(this._ebo[0]);
 		} catch(error) { console.log(error); }
@@ -150,12 +152,14 @@ class CoordinateSystem extends BaseVisualization{
 	}
 
 	loadGLBuffers() {
-		this._vao.push(gl.createVertexArray());
+		if (aBrainGL.contextType=="webgl2") {
+			this._vao.push(gl.createVertexArray());
+			gl.bindVertexArray(this._vao[0]);
+		}
 
 		this._vbo.push(gl.createBuffer());
 		this._ebo.push(gl.createBuffer());
 		
-		gl.bindVertexArray(this._vao[0]);
 
 		// VBO
 		// Vertex Data
@@ -166,24 +170,31 @@ class CoordinateSystem extends BaseVisualization{
 		// EBO
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ebo[0]);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this._elements, gl.STATIC_DRAW);
-
-		// unbind vao
-		gl.bindVertexArray(null);
 	}
 
 	vertexAttribPointer() {
-		gl.bindVertexArray(this._vao[0]);
-
-		let positionAttrib = gl.getAttribLocation(this._shaders[0], "aVertexPosition");
+		this._positionAttributeLoc = gl.getAttribLocation(this._shaders[0], "aVertexPosition");
 
 		this._uniformColorArrayLoc = gl.getUniformLocation(this._shaders[0], "uColorArray");
 		this._uniformMMatrixArrayLoc = gl.getUniformLocation(this._shaders[0], "uModelArray");
 
-		gl.enableVertexAttribArray(positionAttrib);
-		gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+		// Only with webgl1 value will matter
+		this._uniformAxisIDLoc = gl.getUniformLocation(this._shaders[0], "uAxisID");
+
+		gl.enableVertexAttribArray(this._positionAttributeLoc);
+		gl.vertexAttribPointer(this._positionAttributeLoc, 3, gl.FLOAT, false, 0, 0);
 
 		// unbind vao
-		gl.bindVertexArray(null);
+		if (aBrainGL.contextType=="webgl2") {
+			gl.bindVertexArray(null);
+		}
+	}
+
+	bindBufferAttribPointers() {
+		gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo[0]);
+		gl.vertexAttribPointer(this._positionAttributeLoc, 3, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ebo[0]);		
 	}
 
 	loadUniform() {
@@ -200,8 +211,29 @@ class CoordinateSystem extends BaseVisualization{
 		gl.bindVertexArray(null);
 	}
 
+	drawSolid_WebGL1() {
+		this.configGL();
+
+		// X
+		gl.uniform1i(this._uniformAxisIDLoc, 0);
+		gl.drawElements(gl.TRIANGLES, this._elementLength, gl.UNSIGNED_SHORT, 0);
+
+		// Y
+		gl.uniform1i(this._uniformAxisIDLoc, 1);
+		gl.drawElements(gl.TRIANGLES, this._elementLength, gl.UNSIGNED_SHORT, 0);
+
+		// Z
+		gl.uniform1i(this._uniformAxisIDLoc, 2);
+		gl.drawElements(gl.TRIANGLES, this._elementLength, gl.UNSIGNED_SHORT, 0);
+	}
+
 	static createProgram() {
-		return [createShaderProgram("coordinate-system", "standard-fragment")];
+		if (aBrainGL.contextType=="webgl2") {
+			return [createShaderProgram("coordinate-system", "standard-fragment")];
+		} else {
+			return [createShaderProgram("coordinate-system-webgl1", "standard-fragment-webgl1")];
+		}
+
 	}
 
 	updateReferenceToShader(shaderProgram) {

@@ -97,3 +97,69 @@ function loadShaderFromDOM(id) {
 	}
 	return shader;
 }
+
+// returned 
+function groupFiles(files) {
+	groupedFiles = [];
+
+	for (const f of files) {
+		if (f.name.endsWith("bundles")) {
+			let idx = groupedFiles.findIndex( element => element[1][1] != undefined && element[1][1].name.endsWith(f.name+"data"));
+
+			if (idx >= 0) {
+				groupedFiles[idx][1][0] = f;
+			} else {
+				groupedFiles.push(["bundles", [f, undefined]]);
+			}
+
+		} else if (f.name.endsWith("bundlesdata")) {
+			let idx = groupedFiles.findIndex( element => element[1][0] != undefined && f.name.endsWith(element[1][0].name+"data"));
+
+			if (idx >= 0) {
+				groupedFiles[idx][1][1] = f;
+			} else {
+				groupedFiles.push(["bundles", [undefined, f]]);
+			}
+		} else {
+			let extension = f.name.substring(f.name.lastIndexOf('.')+1);
+
+			groupedFiles.push([extension, [f]]);
+		}
+	}
+
+	return groupedFiles;
+}
+
+function parseTrkHeader(charArray) {
+	let ucharView = new Uint8Array(charArray,0,1000);
+	let ushortView = new Uint16Array(charArray,0,1000/2);
+	let trkHeader = {};
+	trkHeader.id_string = String.fromCharCode.apply(null, ucharView.subarray(0,6));
+	trkHeader.dim = new Int16Array(charArray.slice(6,12));
+	trkHeader.voxel_size = new Float32Array(charArray.slice(12,24));
+	trkHeader.origin = new Float32Array(charArray.slice(24,36));
+	trkHeader.n_scalars = ushortView[36/2];
+	trkHeader.scalar_name = new Array(10);
+	for (let i=0; i<10; i++) { trkHeader.scalar_name[i] = String.fromCharCode.apply(null, charArray.slice(38+i*20, 38+(i+1)*20)); }
+	trkHeader.n_properties = ushortView[238/2];
+	trkHeader.property_name = new Array(10);
+	for (let i=0; i<10; i++) { trkHeader.property_name[i] = String.fromCharCode.apply(null, charArray.slice(240+i*20, 240+(i+1)*20)); }
+	trkHeader.vox_to_ras = new Float32Array(charArray.slice(440,504)); // column or row major order???
+	trkHeader.reserved = charArray.slice(504,948);
+	trkHeader.voxel_order = new Int8Array(charArray.slice(948,952));
+	trkHeader.pad2= new Int8Array(charArray.slice(952,956));
+	trkHeader.image_orientation_patient = new Float32Array(charArray.slice(956,980));
+	trkHeader.pad1 = new Int8Array(charArray.slice(980,982));
+	trkHeader.invert_x = ucharView[982];
+	trkHeader.invert_y = ucharView[983];
+	trkHeader.invert_z = ucharView[984];
+	trkHeader.swap_xy = ucharView[985];
+	trkHeader.swap_yz = ucharView[986];
+	trkHeader.swap_zx = ucharView[987];
+	let lastInt = new Int32Array(charArray,988,3);
+	trkHeader.n_count = lastInt[0];
+	trkHeader.version = lastInt[1];
+	trkHeader.hdr_size = lastInt[2];
+
+	return trkHeader;
+}
