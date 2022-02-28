@@ -210,11 +210,6 @@ function draw(currentTime) {
 // }
 
 function resize() {
-	// let width = gl.canvas.clientWidth;
-	// let height = gl.canvas.clientHeight;
-
-	// gl.canvas.width = width;
-	// gl.canvas.height = height;
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
@@ -291,10 +286,13 @@ function startup() {
 	gl.clearColor(backgroundColor[0],backgroundColor[1],backgroundColor[2],backgroundColor[3]);
 
 	// aBrainGL basic mouse setup
-	aBrainGL.mousePositionX = 0;
-	aBrainGL.mousePositionY = 0;
+	aBrainGL.mouse = { clientX : 0, clientY : 0 };
+	aBrainGL.orbitSpeed = 2.5;
 	aBrainGL.orbit = false;
 	aBrainGL.pan = false;
+
+	// BoundingBox option
+	aBrainGL.drawBB = true;
 
 	// Listeners
 	setupListeners();
@@ -350,6 +348,9 @@ function setupListeners() {
 		}
 	}
 	document.getElementById("addFile").accept = validExtensions;
+
+	// Toggle bounding boxes
+	document.getElementById("toggleBB").addEventListener("change", handleToggleBB, false);
 }
 
 function handleContextLost(event) {
@@ -393,26 +394,26 @@ function handleKeyDown(event) {
 
 	switch(event.keyCode) {
 		case 37: // left arrow
-			camera.orbit(-2,0);
-			csCamera.orbit(-2,0);
+			camera.orbit(2*Math.PI/180,[0,1,0]);
+			csCamera.orbit(2*Math.PI/180,[0,1,0]);
 			setupViewMat();
 			break;
 
 		case 38: // up arrow
-			camera.orbit(0,-2);
-			csCamera.orbit(0,-2);
+			camera.orbit(2*Math.PI/180,[1,0,0]);
+			csCamera.orbit(2*Math.PI/180,[1,0,0]);
 			setupViewMat();
 			break;
 
 		case 39: // right arrow
-			camera.orbit(2,0);
-			csCamera.orbit(2,0);
+			camera.orbit(-2*Math.PI/180,[0,1,0]);
+			csCamera.orbit(-2*Math.PI/180,[0,1,0]);
 			setupViewMat();
 			break;
 
 		case 40: // down arrow
-			camera.orbit(0,2);
-			csCamera.orbit(0,2);
+			camera.orbit(-2*Math.PI/180,[1,0,0]);
+			csCamera.orbit(-2*Math.PI/180,[1,0,0]);
 			setupViewMat();
 			break;
 
@@ -482,112 +483,137 @@ function handleWheel(event) {
 }
 
 function handlePointerMove(event) {
+	let idx;
+	let clientX, clientY;
+	let pointerCount = aBrainGL.activePointers.length;
+	let panAvr;
+
 	if (event.pointerType == "mouse") {
-		let deltaX = event.clientX - aBrainGL.mousePositionX;
-		let deltaY = event.clientY - aBrainGL.mousePositionY;
+		clientX = aBrainGL.mouse.clientX;
+		clientY = aBrainGL.mouse.clientY;
 
-		if (deltaX == 0 && deltaY == 0) { return; }
+		aBrainGL.mouse.clientX = event.clientX;
+		aBrainGL.mouse.clientY = event.clientY;
 
-		if (aBrainGL.orbit) {
-			camera.orbit(deltaX,deltaY);
-			csCamera.orbit(deltaX,deltaY);
-		} else if (aBrainGL.pan) {
-			camera.pan(deltaX,deltaY);
-		} else {
-			aBrainGL.orbit = false;
-			aBrainGL.pan = false;
+		panAvr = 1;
 
+	} else if (event.pointerType == "touch") {
+		idx = aBrainGL.activePointers.findIndex((element) => element.identifier == event.pointerId);
+
+		if (idx < 0) {
+			console.log("can't figure out which touch to continue: idx = " + idx);
 			return;
 		}
 
+		clientX = aBrainGL.activePointers[idx].clientX;
+		clientY = aBrainGL.activePointers[idx].clientY;
 
-		aBrainGL.mousePositionX = event.clientX;
-		aBrainGL.mousePositionY = event.clientY;
-		setupViewMat();
-	} else if (event.pointerType == "touch") {
-		let idx = aBrainGL.activePointers.findIndex((element) => element.identifier == event.pointerId);
+		panAvr = pointerCount;
 
-		if (idx >= 0) {
-			let pointerCount = aBrainGL.activePointers.length;
-
-			// orbit (1 finger)
-			if (pointerCount == 1) {
-				let deltaX = event.clientX - aBrainGL.activePointers[idx].clientX;
-				let deltaY = event.clientY - aBrainGL.activePointers[idx].clientY;
-
-				if (deltaX == 0 && deltaY == 0) { return; }
-
-				camera.orbit(deltaX,deltaY);
-				csCamera.orbit(deltaX,deltaY);
-
-			// zooming, rotating and panning (2 fingers)
-			} else if (pointerCount == 2) {
-				if (aBrainGL.activePointers[idx].clientX == event.clientX && aBrainGL.activePointers[idx].clientY == event.clientY) { return; }
-
-				let newPointers = new Array(2);
-				newPointers[idx] = {clientX : event.clientX, clientY : event.clientY};
-				newPointers[1-idx] = {clientX : aBrainGL.activePointers[1-idx].clientX, clientY : aBrainGL.activePointers[1-idx].clientY};
-
-				let initTanX = (aBrainGL.activePointers[1].clientX-aBrainGL.activePointers[0].clientX);
-				let initTanY = (aBrainGL.activePointers[1].clientY-aBrainGL.activePointers[0].clientY);
-				let endTanX = (newPointers[1].clientX-newPointers[0].clientX);
-				let endTanY = (newPointers[1].clientY-newPointers[0].clientY);
-
-				let initAngle = (180/Math.PI) * Math.atan(initTanY/initTanX);
-				let endAngle = (180/Math.PI) * Math.atan(endTanY/endTanX);
-
-				// homogenize quadrant
-				if (initTanX < 0) { initAngle += 180; }
-				if (endTanX < 0) { endAngle += 180; }
-
-				let deltaAngle = endAngle - initAngle;
-
-				let r = camera.radius;
-
-				let avrXPrev = (aBrainGL.activePointers[0].clientX+aBrainGL.activePointers[1].clientX)/2;
-				let avrXNext = (newPointers[0].clientX+newPointers[1].clientX)/2;
-				let avrYPrev = (aBrainGL.activePointers[0].clientY+aBrainGL.activePointers[1].clientY)/2;
-				let avrYNext = (newPointers[0].clientY+newPointers[1].clientY)/2;
-
-				let deltaPanningX_toCenter = (aBrainGL.viewportWidth - 2*avrXPrev-avrXNext+avrXPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
-				let deltaPanningY_toCenter = (aBrainGL.viewportHeight- 2*avrYPrev-avrYNext+avrYPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
-
-				let deltaPanningX_toEnd = (2*avrXNext-aBrainGL.viewportWidth+avrXNext-avrXPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
-				let deltaPanningY_toEnd = (2*avrYNext-aBrainGL.viewportHeight+avrYNext-avrYPrev)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
-
-				let deltaFov = Math.sqrt(initTanX*initTanX + initTanY*initTanY) - Math.sqrt(endTanX*endTanX + endTanY*endTanY);
-
-				camera.pan(deltaPanningX_toCenter, deltaPanningY_toCenter);
-				camera.transverseRotation(deltaAngle);
-
-				aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / aBrainGL.viewportHeight + 1)));
-
-
-				if (aBrainGL.fov < aBrainGL.FOV_FLOOR_LIMITER) { aBrainGL.fov = aBrainGL.FOV_FLOOR_LIMITER; }
-				else if (aBrainGL.fov > aBrainGL.FOV_CEIL_LIMITER) { aBrainGL.fov = aBrainGL.FOV_CEIL_LIMITER; }
-
-				glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
-				camera.pan(deltaPanningX_toEnd, deltaPanningY_toEnd);
-				csCamera.transverseRotation(deltaAngle);
-
-				configPerspective();
-
-			// panning (3 or more fingers)
-			} else {
-				let deltaX = (event.clientX - aBrainGL.activePointers[idx].clientX) / pointerCount;
-				let deltaY = (event.clientY - aBrainGL.activePointers[idx].clientY) / pointerCount;
-
-				camera.pan(deltaX,deltaY);
-			}
-
-			aBrainGL.activePointers[idx].clientX = event.clientX;
-			aBrainGL.activePointers[idx].clientY = event.clientY;
-			setupViewMat();
-		} else {
-			console.log("can't figure out which touch to continue: idx = " + idx);
-
-		}
+	} else {
+		alert("Unrecognized pointerType: "+event.pointerType);
+		return;
 	}
+	
+
+	if (aBrainGL.orbit || pointerCount == 1) {
+		let r = camera.radius;
+		let y_offset = document.getElementById("head").clientHeight;
+
+		let x1 = (2*clientX - aBrainGL.viewportWidth)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+		let x2 = (2*event.clientX - aBrainGL.viewportWidth)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+
+		let y1 = (aBrainGL.viewportHeight + y_offset - 2*clientY)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+		let y2 = (aBrainGL.viewportHeight + y_offset - 2*event.clientY)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+
+		let screen1 = glMatrix.vec3.fromValues(x1,y1,r);
+		let screen2 = glMatrix.vec3.fromValues(x2,y2,r);
+			
+		let p1 = glMatrix.vec3.create();
+		let p2 = glMatrix.vec3.create();
+		glMatrix.vec3.subtract(p1,screen1,camera.center);
+		glMatrix.vec3.subtract(p2,screen2,camera.center);
+
+		glMatrix.vec3.normalize(p1,p1);
+		glMatrix.vec3.normalize(p2,p2);
+
+		let rad = glMatrix.vec3.dot(p1,p2);
+		if (rad > 1) { rad = 0.99999999999; }
+
+		let angle = Math.acos(rad)*aBrainGL.orbitSpeed;
+		let axis = glMatrix.vec3.create();
+		glMatrix.vec3.cross(axis,p2,p1);
+		glMatrix.vec3.normalize(axis,axis);
+
+		if (isNaN(angle)) { return; }
+		camera.orbit(angle,axis);
+		csCamera.orbit(angle,axis);
+
+	} else if (aBrainGL.pan || pointerCount > 2) {
+		let r = camera.radius;
+
+		let panX = (event.clientX - clientX)/aBrainGL.viewportHeight*2*r*Math.tan(aBrainGL.fov/2)/panAvr;
+		let panY = (event.clientY - clientY)/aBrainGL.viewportHeight*2*r*Math.tan(aBrainGL.fov/2)/panAvr;
+
+		camera.pan(panX,panY);
+
+	} else if (pointerCount == 2) {
+		let newPointers = new Array(2);
+		newPointers[idx] = {clientX : event.clientX, clientY : event.clientY};
+		newPointers[1-idx] = {clientX : aBrainGL.activePointers[1-idx].clientX, clientY : aBrainGL.activePointers[1-idx].clientY};
+
+		let initTanX = (aBrainGL.activePointers[1].clientX-aBrainGL.activePointers[0].clientX);
+		let initTanY = (aBrainGL.activePointers[1].clientY-aBrainGL.activePointers[0].clientY);
+		let endTanX = (newPointers[1].clientX-newPointers[0].clientX);
+		let endTanY = (newPointers[1].clientY-newPointers[0].clientY);
+
+		let initAngle = (180/Math.PI) * Math.atan(initTanY/initTanX);
+		let endAngle = (180/Math.PI) * Math.atan(endTanY/endTanX);
+
+		// homogenize quadrant
+		if (initTanX < 0) { initAngle += 180; }
+		if (endTanX < 0) { endAngle += 180; }
+
+		let deltaAngle = endAngle - initAngle;
+
+		let r = camera.radius;
+
+		let avrXPrev = (aBrainGL.activePointers[0].clientX+aBrainGL.activePointers[1].clientX)/2;
+		let avrXNext = (newPointers[0].clientX+newPointers[1].clientX)/2;
+		let avrYPrev = (aBrainGL.activePointers[0].clientY+aBrainGL.activePointers[1].clientY)/2;
+		let avrYNext = (newPointers[0].clientY+newPointers[1].clientY)/2;
+
+		let deltaPanningX_toCenter = (aBrainGL.viewportWidth - avrXPrev-avrXNext)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+		let deltaPanningY_toCenter = (aBrainGL.viewportHeight- avrYPrev-avrYNext)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+
+		let deltaPanningX_toEnd = (-aBrainGL.viewportWidth-avrXPrev + 3*avrXNext)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+		let deltaPanningY_toEnd = (-aBrainGL.viewportHeight-avrYPrev+ 3*avrYNext)/aBrainGL.viewportHeight*r*Math.tan(aBrainGL.fov/2);
+
+		let deltaFov = Math.sqrt(initTanX*initTanX + initTanY*initTanY) - Math.sqrt(endTanX*endTanX + endTanY*endTanY);
+
+		camera.pan(deltaPanningX_toCenter, deltaPanningY_toCenter);
+		camera.transverseRotation(deltaAngle);
+
+		aBrainGL.fov = (2 * Math.atan(Math.tan(aBrainGL.fov/2) * (deltaFov / aBrainGL.viewportHeight + 1)));
+
+
+		if (aBrainGL.fov < aBrainGL.FOV_FLOOR_LIMITER) { aBrainGL.fov = aBrainGL.FOV_FLOOR_LIMITER; }
+		else if (aBrainGL.fov > aBrainGL.FOV_CEIL_LIMITER) { aBrainGL.fov = aBrainGL.FOV_CEIL_LIMITER; }
+
+		glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
+		camera.pan(deltaPanningX_toEnd, deltaPanningY_toEnd);
+		csCamera.transverseRotation(deltaAngle);
+
+		configPerspective();
+
+	} else { return; }
+
+	if (pointerCount > 0) {
+		aBrainGL.activePointers[idx].clientX = event.clientX;
+		aBrainGL.activePointers[idx].clientY = event.clientY;
+	}
+	
+	setupViewMat();
 }
 
 function handlePointerDown(event) {
@@ -605,8 +631,8 @@ function handlePointerDown(event) {
 			return;
 		}
 
-		aBrainGL.mousePositionX = event.clientX;
-		aBrainGL.mousePositionY = event.clientY;
+		aBrainGL.mouse.clientX = event.clientX;
+		aBrainGL.mouse.clientY = event.clientY;
 	} else if (event.pointerType == "touch") {
 		aBrainGL.activePointers.push(getTouchData(event));
 	}
@@ -677,12 +703,14 @@ function handleAddFile(event) {
 				//search loader
 				let urls = fileData[1].map(element => URL.createObjectURL(element));
 				let loaders = visualizationTypes.filter(element => element.validFileExtension != undefined && element.validFileExtension.has(fileData[0]));
-				let VisObj;
+				let visObj;
 
-				if (loaders.length == 1) { VisObj = loaders[0]; }
+				if (loaders.length == 1) { visObj = loaders[0]; }
 				else { alert("Multiple classes can load file \'"+fileData[1][0]+"\'. Must select a class *** not implemented yet ***."); }
 
-				aBrainGL.visualizationObjects.push(new VisObj(0, [urls, fileData[1][0].name]));
+				let newVisObj = new visObj(0, [urls, fileData[1][0].name]);
+				newVisObj.drawBB = aBrainGL.drawBB;
+				aBrainGL.visualizationObjects.push(newVisObj);
 			}
 		}
 
@@ -701,4 +729,12 @@ function handleAddFile(event) {
 
 function handleDeleteAll(event) {
 	aBrainGL.visualizationObjects.length = 0;
+}
+
+function handleToggleBB(event) {
+	aBrainGL.drawBB = document.getElementById("toggleBB").checked;
+
+	for (const visObj of aBrainGL.visualizationObjects) {
+		visObj.drawBB = aBrainGL.drawBB;
+	}
 }

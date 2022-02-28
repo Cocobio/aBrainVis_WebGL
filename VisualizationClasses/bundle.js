@@ -68,7 +68,6 @@ class Bundle extends BaseVisualization {
 		this.loadOpenGLData();
 
 		this._draw = true;
-		this._drawBB = true;
 
 		this._boundingBox.updateBBModel(this._dim, this._center);
 

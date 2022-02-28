@@ -5,6 +5,11 @@ This is a project with the graphical engine of aBrainVis, an Android app. It run
 The latest stable version runs in [github pages](https://cocobio.github.io/aBrainVis_WebGL/).
 
 
+## aBrainVis v1.2.2
+- Improve orbit with mouse.
+- Improve pan with mouse and 3 or more touch pointers.
+- Toggle bounding box checkbox.
+
 ## aBrainVis v1.2.1
 - ~~Fix parser with regex (Miguel's data). ~~
 - Better parsing of .bundles header. Using JSON parser.

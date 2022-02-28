@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="en">
+<div id="head">
 <head>
 	<title>aBrainVis</title>
 	<meta charset="utf-8">
@@ -233,8 +234,10 @@
 	<button id="toggleFS">Go fullscreen</button>
 	<input type="file" id="addFile" multiple name="file">
 	<button id="deleteAll">delete</button>
+	<input type="checkbox" id="toggleBB" name="toogle BoundingBoxes" checked> toggle bb
 
 </head>
+</div>
 
 <body onload="startup();">
 	<canvas id="myGLCanvas" style="touch-action:none" oncontextmenu="return false"></canvas>

@@ -33,23 +33,33 @@ class Camera {
 		this.calculateView();
 	}
 
-	orbit(dx,dy) {
-		let angleMagnitude = Math.sqrt(dx*dx + dy*dy);
-
-		if (angleMagnitude < glMatrix.EPSILON) { return; }
-
-		let x = -dy / angleMagnitude;
-		let y = -dx / angleMagnitude;
-		let z = 0;
-
+	orbit(angle, axis) {
 		let newQuat = glMatrix.quat.create();
-		glMatrix.quat.setAxisAngle(newQuat, [x,y,z], glMatrix.glMatrix.toRadian(angleMagnitude));
+		glMatrix.quat.setAxisAngle(newQuat, axis, angle);
 		glMatrix.quat.multiply(this._rotation, this._rotation, newQuat);
 
 		glMatrix.quat.normalize(this._rotation, this._rotation);
 
 		this.calculateView();
 	}
+
+	// orbit(dx,dy) {
+	// 	let angleMagnitude = Math.sqrt(dx*dx + dy*dy);
+
+	// 	if (angleMagnitude < glMatrix.EPSILON) { return; }
+
+	// 	let x = -dy / angleMagnitude;
+	// 	let y = -dx / angleMagnitude;
+	// 	let z = 0;
+
+	// 	let newQuat = glMatrix.quat.create();
+	// 	glMatrix.quat.setAxisAngle(newQuat, [x,y,z], glMatrix.glMatrix.toRadian(angleMagnitude));
+	// 	glMatrix.quat.multiply(this._rotation, this._rotation, newQuat);
+
+	// 	glMatrix.quat.normalize(this._rotation, this._rotation);
+
+	// 	this.calculateView();
+	// }
 
 	pan(dx, dy) {
 		let pan = glMatrix.vec3.fromValues(-dx,dy,0);
@@ -178,4 +188,6 @@ class Camera {
 	get radius() { return this._radius; }
 
 	get viewMat() { return this._viewMat; }
+
+	get center() { return this._center; }
 }

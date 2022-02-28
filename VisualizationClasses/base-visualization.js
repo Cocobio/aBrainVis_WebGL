@@ -25,7 +25,6 @@ class BaseVisualization {
 		this._scaleMat = glMatrix.mat4.create();
 
 		this._draw = false;
-		this._drawBB = false;
 
 		// Information for the bounding box
 		this._dim = glMatrix.vec3.create();
@@ -65,8 +64,8 @@ class BaseVisualization {
 	get draw() { return this._draw; }
 	set draw(draw) { this._draw = draw; }
 
-	get drawBB() { return this._drawBB; }
-	set drawBB(drawBB) { this._drawBB = drawBB; }
+	get drawBB() { if (this._boundingBox) { return this._boundingBox.draw; } else { return false; } }
+	set drawBB(drawBB) { if (this._boundingBox) { this._boundingBox.draw = drawBB; } }
 
 	get selectedShader() { return this._selectedShader; }
 	set selectedShader(idShader) { 

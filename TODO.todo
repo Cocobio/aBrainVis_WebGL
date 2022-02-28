@@ -2,11 +2,14 @@
 
 □ resize using gl parameters (the object 'gl')
 
-□ Improve orbit with mouse.
-
 □ URL to dropbox - drive - etc.
 □ Loader from url?
 	□ Output link with files loaded**
+
+aBrainVis v1.2.2:
+✔ Improve orbit with mouse. @done (28-02-22 00:56)
+✔ Improve pan with mouse and 3 or more touch pointers. @done (28-02-22 00:56)
+✔ Toggle bounding box button (or checkbox) @done (28-02-22 00:56)
 
 aBrainVis v1.2.1:
 ✔ Fix parser with regex (Miguel's data). @done (26-02-22 13:09)
