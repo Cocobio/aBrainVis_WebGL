@@ -101,6 +101,7 @@ function loadShaderFromDOM(id) {
 // returned 
 function groupFiles(files) {
 	groupedFiles = [];
+	metadataFiles = [];		// Separated in order to leave at the end of the list
 
 	for (const f of files) {
 		if (f.name.endsWith("bundles")) {
@@ -120,6 +121,8 @@ function groupFiles(files) {
 			} else {
 				groupedFiles.push(["bundles", [undefined, f]]);
 			}
+		} else if (f.name.endsWith("json")) {
+			metadataFiles.push(["json", [f]]);
 		} else {
 			let extension = f.name.substring(f.name.lastIndexOf('.')+1);
 
@@ -127,7 +130,7 @@ function groupFiles(files) {
 		}
 	}
 
-	return groupedFiles;
+	return groupedFiles.concat(metadataFiles);
 }
 
 function parseTrkHeader(charArray) {
@@ -162,4 +165,16 @@ function parseTrkHeader(charArray) {
 	trkHeader.hdr_size = lastInt[2];
 
 	return trkHeader;
+}
+
+function checkFileExist(urlToFile) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('HEAD', urlToFile, false);
+	xhr.send();
+	
+	if (xhr.status == "404") {
+		return false;
+	} else {
+		return true;
+	}
 }

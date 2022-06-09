@@ -6,6 +6,20 @@
 □ Loader from url?
 	□ Output link with files loaded**
 
+✘	Load examples from directory @cancelled (09-06-22 02:18)
+
+□	No tirar error de que falta archivo, si no que abrir otra browser para buscar el archivo
+✔	Script para transformar hie a json con colores. @done (08-06-22 21:31)
+✘	Cambiar todo `el texto a ingles. @cancelled (09-06-22 00:54)
+
+aBrainVis v1.2.3:
+✔	Delete files, ademas resetee camara @done (08-06-22 21:31)
+✔	Combobox con los archivos sample que trae el server @done (09-06-22 02:11)
+✔	Load colors (not random) or reshuffle colors. @done (08-06-22 22:41)
+	✔	Reload random colors @done (08-06-22 22:40)
+	✘	Change 1 color at the time @cancelled (08-06-22 22:40)
+	✔	load colors from file @done (09-06-22 00:54)
+
 aBrainVis v1.2.2:
 ✔ Improve orbit with mouse. @done (28-02-22 00:56)
 ✔ Improve pan with mouse and 3 or more touch pointers. @done (28-02-22 00:56)
@@ -48,10 +62,6 @@ aBrainVis v1.1:
 			 ✔ Program mouse use with PointEvents @done (17-02-22 22:51)
 
 
-
 Future work:
 	□	Meshes & MRI
 	□	Meshes load with textures.
-
-	□	Load colors (not random) or reshuffle colors.
-		□	Reload random colors

@@ -1,3 +1,12 @@
+/*
+	aBrainGL.sampleFiles => contains the path to files provided on the server. Each element must follow
+							the convention of: element = [Class, "path"], for the proper Class constructor
+							to be called. This will allow the use of more types of sample files (not just
+							Bundles classes).
+
+	Creator: Ignacio Osorio
+*/
+
 let visualizationTypes = [Bundle, BoundingBox];
 
 let gl;
@@ -10,7 +19,7 @@ let lightPosition = glMatrix.vec4.fromValues(0.0, 100.0, 0.0, 1.0);
 let lightValues = glMatrix.vec4.fromValues(0.5, 0.6, 1.0);
 
 // Cameras for obj and cordinate system
-let camera = new Camera(350.0);
+let camera = new Camera(550.0);
 let csCamera = new Camera(1/Math.sin(22.5*Math.PI/180));
 
 function setDefaultLightValue() {
@@ -276,12 +285,21 @@ function startup() {
 	aBrainGL.coordSystem = new CoordinateSystem(aBrainGL.csShader);
 
 	// Default visualization obj
-	aBrainGL.defaultFile = "resources/atlas.bundles";
-	aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.defaultFile));
-	// aBrainGL.visualizationObjects.push(new Bundle(0, ["https://www.dropbox.com/s/iz7ly7vyhj3mogp/fibers_input.tck?dl=1", "fileData[1][0].tck"]));
-	// aBrainGL.defaultFile = "resources/001_SWM_Left_segmentation.bundles";
-	// aBrainGL.visualizationObjects.push(new Bundle(0, aBrainGL.defaultFile));
-		
+	aBrainGL.id = 0;
+	aBrainGL.sampleFiles = [[Bundle,"resources/atlas.bundles"]];//, [Bundle,"resources/001_SWM_Left_segmentation.bundles"]];
+	loadSampleFile(0);
+
+	// Set sampleFile list on combo box
+	let select = document.getElementById('SampleFiles');
+	for (let i=0; i<aBrainGL.sampleFiles.length; i++) {
+		let file = aBrainGL.sampleFiles[i][1];
+		let opt = document.createElement('option');
+		opt.value = i;
+		opt.innerHTML = file.substring(file.lastIndexOf("/"),file.lastIndexOf("."));
+		select.appendChild(opt);
+	}
+	
+	// WebGL configurations for depth and background
 	gl.enable(gl.DEPTH_TEST);
 	gl.clearColor(backgroundColor[0],backgroundColor[1],backgroundColor[2],backgroundColor[3]);
 
@@ -336,6 +354,7 @@ function setupListeners() {
 	document.getElementById("toggleFS").addEventListener("click", handleToggleFullScreen, false);
 	document.getElementById("addFile").addEventListener("change", handleAddFile, false);
 	document.getElementById("deleteAll").addEventListener("click", handleDeleteAll, false);
+	document.getElementById("randomColors").addEventListener("click", handleShuffleAllColors, false);
 
 	// Set valid extensions for files
 	let validExtensions = ""
@@ -453,6 +472,7 @@ function handleKeyDown(event) {
 			setupViewMat();
 			break;
 
+		// For testing lose of context
 		// case 55:
 		// 	canvas.loseContext();
 		// 	break;
@@ -696,9 +716,21 @@ function handleAddFile(event) {
 		let missingFiles = [];
 
 		for (const fileData of groupedFiles) {
-			if (fileData[1].findIndex( element => element==undefined) >=0) {
+			if (fileData[1].findIndex( element => element==undefined) >= 0) {
 				let idx = fileData[1].findIndex( element => element!=undefined);
 				missingFiles.push(fileData[1][idx]);
+			} else if (fileData[0] == 'json') {
+				let metadataName = fileData[1][0].name.replace(/\.[^/.]+$/, "")
+
+				for (const visObj of aBrainGL.visualizationObjects)
+					if (visObj.fileName == metadataName) {
+						if (visObj._vbo.length == 0)	// not loaded yet, needs to read file first, then read metadata
+							visObj.finishingTouchesCallback = () => visObj.loadMetaData(URL.createObjectURL(fileData[1][0]));
+						else 							// object loaded, ready to load metadata
+							visObj.loadMetaData(URL.createObjectURL(fileData[1][0]));
+
+					}
+				console.log("Loading metadata");
 			} else {
 				//search loader
 				let urls = fileData[1].map(element => URL.createObjectURL(element));
@@ -708,9 +740,10 @@ function handleAddFile(event) {
 				if (loaders.length == 1) { visObj = loaders[0]; }
 				else { alert("Multiple classes can load file \'"+fileData[1][0]+"\'. Must select a class *** not implemented yet ***."); }
 
-				let newVisObj = new visObj(0, [urls, fileData[1][0].name]);
+				let newVisObj = new visObj(aBrainGL.id++, [urls, fileData[1][0].name]);
 				newVisObj.drawBB = aBrainGL.drawBB;
 				aBrainGL.visualizationObjects.push(newVisObj);
+				console.log("loading file");
 			}
 		}
 
@@ -719,7 +752,7 @@ function handleAddFile(event) {
 			for (let missingFile of missingFiles) {
 				missingFilesStr += "\n" + missingFile.name; 
 			}
-			alert("Missing files for: " + missingFilesStr);
+			alert("Missing files for: " + missingFilesStr + "\nPlease reselect the files. Example: Bundle files consist of .bundles and .bundlesdata.");
 		}
 	}
 
@@ -727,14 +760,55 @@ function handleAddFile(event) {
 	document.getElementById("addFile").value = null;
 }
 
+// Handler for BUTTON DELETE
 function handleDeleteAll(event) {
 	aBrainGL.visualizationObjects.length = 0;
+
+	// Reset cameras
+	camera.defaultValues();
+	csCamera.defaultValues();
+
+	aBrainGL.fov = aBrainGL.FOV_DEFAULT;
+	glMatrix.mat4.perspective(aBrainGL.projMat, aBrainGL.fov, aBrainGL.viewportWidth/aBrainGL.viewportHeight, 0.01, 1000.0);
+
+
+	setupViewMat();
+	configPerspective();
+	document.getElementById('SampleFiles').selectedIndex = 0;
 }
 
+function handleShuffleAllColors(event) {
+	for (const visObj of aBrainGL.visualizationObjects) {
+		if (visObj.shuffleColors != undefined) {
+			visObj.shuffleColors();
+		}
+	}
+}
+
+// Handler for TOGGLE BB
 function handleToggleBB(event) {
 	aBrainGL.drawBB = document.getElementById("toggleBB").checked;
 
 	for (const visObj of aBrainGL.visualizationObjects) {
 		visObj.drawBB = aBrainGL.drawBB;
+	}
+}
+
+async function loadSampleFile(idx) {
+	let sampleFile = aBrainGL.sampleFiles[idx][1];
+	let loader = aBrainGL.sampleFiles[idx][0];
+	let metadata = sampleFile.substring(0,sampleFile.lastIndexOf(".")+1)+"json";
+	let metadataExists = await checkFileExist(metadata);
+
+	// Load file
+	let newFile = new loader(aBrainGL.id++, sampleFile);
+	aBrainGL.visualizationObjects.push(newFile);
+
+	// If there is metadata for this file on the server
+	if (metadataExists) {
+		if (newFile._vbo.length == 0)	// not loaded yet, needs to read file first, then read metadata
+			newFile.finishingTouchesCallback = () => newFile.loadMetaData(metadata);
+		else 							// object loaded, ready to load metadata
+			newFile.loadMetaData(metadata);
 	}
 }

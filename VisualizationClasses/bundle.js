@@ -5,7 +5,11 @@ class Bundle extends BaseVisualization {
 										['bundles', "_readBundle"],
 										['bundlesdata', ""],			// Only for setup of file loader
 										[ 'tck', "_readTck"],
-										[ 'trk', "_readTrk"]
+										[ 'trk', "_readTrk"],
+										[ 'json', ""]					// Only for setups of file loader... Will contain metadata
+										]);
+	static _validMetadata = new Map([
+										['colors', "createColorTableFromDict"]
 										]);
 	static _type = Bundle.name;
 
@@ -59,23 +63,30 @@ class Bundle extends BaseVisualization {
 		this._boundingBox = new BoundingBox([0,0,0], [0,0,0]);
 
 		// Read and prepare array buffers
+		this.finishingTouchesCallback = undefined;
 		this.finishingTouches();
 	}
 
 	async finishingTouches() {
 		await this.readData();
-		this.createColorTable();
+		this.createRandomColorTable();
 		this.loadOpenGLData();
-
-		this._draw = true;
 
 		this._boundingBox.updateBBModel(this._dim, this._center);
 
+		if (this.finishingTouchesCallback != undefined) {
+			this.finishingTouchesCallback();
+			this.finishingTouchesCallback = undefined;
+		}
+
 		console.log("Loading ready "+ this._name +" with "+ this._curvesCount +
 			" fibers and "+ this._bundlesNames.length +" bundles.");
+		
+		this._draw = true;
 	}
 
 	loadOpenGLData() {
+		this.createColorTexture();
 		this.loadColorTexture();
 		this.loadGLBuffers();
 		this.vertexAttribPointer();
@@ -645,9 +656,10 @@ class Bundle extends BaseVisualization {
 		return this._validFileExtensions;
 	}
 
-	createColorTable() {
+	createRandomColorTable() {
 		////////// Y si utilizo otro que no sea Float32Array?
-		this._colorTable = new Float32Array(this._bundlesNames.length*4);
+		if (this._colorTable == null)
+			this._colorTable = new Float32Array(this._bundlesNames.length*4);
 
 		for (let i=0; i<this._bundlesNames.length; i++) {
 			this._colorTable[ i*4 ] = Math.random()*0.7 + 0.3;
@@ -657,7 +669,21 @@ class Bundle extends BaseVisualization {
 		}
 	}
 
-	loadColorTexture() {
+	createColorTableFromDict(dict) {
+		for (const [name, color] of Object.entries(dict)) {
+			let idx = this._bundlesNames.findIndex( element => element==name);
+
+			if (idx != -1) {
+				this._colorTable[ idx*4 ] = color[0]/255.0;
+				this._colorTable[idx*4+1] = color[1]/255.0;
+				this._colorTable[idx*4+2] = color[2]/255.0;
+			}
+		}
+
+		this.updateColorTextures();
+	}
+
+	createColorTexture() {
 		this._hColorTableTexture = gl.createTexture();
 
 		gl.activeTexture(gl.TEXTURE0);
@@ -669,12 +695,28 @@ class Bundle extends BaseVisualization {
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	}
 
+	loadColorTexture() {
 		if (aBrainGL.contextType == "webgl2") {
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, this._bundlesNames.length, 1, 0, gl.RGBA, gl.FLOAT, this._colorTable, 0);
 		} else {
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._bundlesNames.length, 1, 0, gl.RGBA, gl.FLOAT, this._colorTable, 0);
 		}
+	}
+
+	updateColorTextures() {
+		for (let i=0; i<Bundle._shaders.length; i++) {
+			gl.useProgram(Bundle._shaders[i]);
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, this._hColorTableTexture);
+			this.loadColorTexture();
+		}
+	}
+
+	shuffleColors() {
+		this.createRandomColorTable();
+		this.updateColorTextures();
 	}
 
 	loadGLBuffers() {
@@ -772,6 +814,15 @@ class Bundle extends BaseVisualization {
 	configWebGL1() {
 		super.configWebGL1();
 		gl.uniform1f(this._uniformTextureLengthLoc, this._bundlesNames.length);
+	}
+
+	async loadMetaData(jsonFileUrl) {
+		let metadata = await loadFile(jsonFileUrl, 'json');
+
+		for (const [key, value] of Object.entries(metadata)) {
+			if (Bundle._validMetadata.has(key)) 
+				this[Bundle._validMetadata.get(key)](value);
+		}
 	}
 
 	drawSolid() {
