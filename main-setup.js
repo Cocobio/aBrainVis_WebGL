@@ -273,6 +273,7 @@ function startup() {
 	aBrainGL.FOV_DEFAULT = glMatrix.glMatrix.toRadian(45.0);
 	aBrainGL.FOV_FLOOR_LIMITER = glMatrix.glMatrix.toRadian(1.0);
 	aBrainGL.FOV_CEIL_LIMITER = glMatrix.glMatrix.toRadian(160.0);
+	aBrainGL.VIEWPORT_FOV_SCALER = 0.02;
 	aBrainGL.fov = aBrainGL.FOV_DEFAULT;
 	aBrainGL.projMat = glMatrix.mat4.create();
 	aBrainGL.csProjMat = glMatrix.mat4.create();
@@ -286,7 +287,7 @@ function startup() {
 
 	// Default visualization obj
 	aBrainGL.id = 0;
-	aBrainGL.sampleFiles = [[Bundle,"resources/atlas.bundles"]];//, [Bundle,"resources/001_SWM_Left_segmentation.bundles"]];
+	aBrainGL.sampleFiles = [[Bundle,"resources/atlas.bundles"], [Bundle,"resources/AtlasMG.bundles"], [Bundle,"resources/AtlasRO.bundles"], [Bundle,"resources/SWMatlasCR2017.bundles"]];//, [Bundle,"resources/001_SWM_Left_segmentation.bundles"]];
 	loadSampleFile(0);
 
 	// Set sampleFile list on combo box
@@ -486,7 +487,7 @@ function handleKeyUp(event) {
 }
 
 function handleWheel(event) {
-	let deltaFov = aBrainGL.viewportHeight*0.1;
+	let deltaFov = aBrainGL.viewportHeight*aBrainGL.VIEWPORT_FOV_SCALER;
 
 	if (event.wheelDeltaY > 0) {
 		deltaFov *= -1;
@@ -796,19 +797,35 @@ function handleToggleBB(event) {
 
 async function loadSampleFile(idx) {
 	let sampleFile = aBrainGL.sampleFiles[idx][1];
-	let loader = aBrainGL.sampleFiles[idx][0];
-	let metadata = sampleFile.substring(0,sampleFile.lastIndexOf(".")+1)+"json";
-	let metadataExists = await checkFileExist(metadata);
 
-	// Load file
-	let newFile = new loader(aBrainGL.id++, sampleFile);
-	aBrainGL.visualizationObjects.push(newFile);
+	let i = aBrainGL.visualizationObjects.findIndex(element => element.filePath == sampleFile);
 
-	// If there is metadata for this file on the server
-	if (metadataExists) {
-		if (newFile._vbo.length == 0)	// not loaded yet, needs to read file first, then read metadata
-			newFile.finishingTouchesCallback = () => newFile.loadMetaData(metadata);
-		else 							// object loaded, ready to load metadata
-			newFile.loadMetaData(metadata);
+	// Only one instance for a sample file
+	if (i != -1) {
+		let metadata = sampleFile.substring(0,sampleFile.lastIndexOf(".")+1)+"json";
+		let metadataExists = await checkFileExist(metadata);
+
+		// If there is metadata for this file on the server update it to the sample file
+		if (metadataExists)
+			aBrainGL.visualizationObjects[i].loadMetaData(metadata);
+	} else {
+		let loader = aBrainGL.sampleFiles[idx][0];
+		let metadata = sampleFile.substring(0,sampleFile.lastIndexOf(".")+1)+"json";
+		let metadataExists = await checkFileExist(metadata);
+
+		// Load file
+		let newFile = new loader(aBrainGL.id++, sampleFile);
+		aBrainGL.visualizationObjects.push(newFile);
+
+		// If there is metadata for this file on the server
+		if (metadataExists) {
+			if (newFile._vbo.length == 0)	// not loaded yet, needs to read file first, then read metadata
+				newFile.finishingTouchesCallback = () => newFile.loadMetaData(metadata);
+			else 							// object loaded, ready to load metadata
+				newFile.loadMetaData(metadata);
+		}
 	}
+
+	// Leave combo box unselected
+	document.getElementById('SampleFiles').selectedIndex = 0;
 }

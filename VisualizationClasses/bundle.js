@@ -873,6 +873,7 @@ class Bundle extends BaseVisualization {
 	}
 
 	get fileName() { return this._name; }
+	get filePath() { return this._path; }
 	get bundlesNames() { return this._bundlesNames; }
 
 	updateEBO() {

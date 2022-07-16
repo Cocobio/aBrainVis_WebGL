@@ -7,10 +7,17 @@
 	□ Output link with files loaded**
 
 ✘	Load examples from directory @cancelled (09-06-22 02:18)
+✘	Cambiar todo el texto a ingles. @cancelled (09-06-22 00:54)
 
 □	No tirar error de que falta archivo, si no que abrir otra browser para buscar el archivo
+
+
+aBrainVis v1.2.4:
 ✔	Script para transformar hie a json con colores. @done (08-06-22 21:31)
-✘	Cambiar todo `el texto a ingles. @cancelled (09-06-22 00:54)
+✔	Agregar atlas extras en resources: @done (15-07-22 23:34)
+	✔	Atlas Miguel @done (15-07-22 23:34)
+	✔	Atlas Claudio @done (15-07-22 23:34)
+	✔	Atlas CR2017? @done (15-07-22 23:34)
 
 aBrainVis v1.2.3:
 ✔	Delete files, ademas resetee camara @done (08-06-22 21:31)
